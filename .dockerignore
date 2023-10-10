@@ -1,0 +1,13 @@
+.git
+data
+library
+migrations
+target
+.dockerignore
+.gitignore
+Dockerfile
+database.db
+docker-compose.yml
+diesel.toml
+request.sh
+README.md
