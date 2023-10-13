@@ -1,9 +1,9 @@
 use rocket::config::{Config, Environment};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
+use rocket::routes;
 use rocket::Outcome;
 use rocket::{get, post, put};
-use rocket::routes;
 use rocket_contrib::json::Json;
 // use rocket_contrib::json::{Json, JsonValue};
 // use serde_json::json;
@@ -33,28 +33,27 @@ pub fn create_rocket(address: IpAddr, port: u16, register: bool) -> rocket::Rock
         .port(port)
         .unwrap();
 
-    rocket::custom(config)
-        .mount(
-            "/",
-            if register {
-                routes![
-                    get_audiobooks_route,
-                    get_audiobook_route,
-                    get_audiobook_position_route,
-                    put_audiobook_position_route,
-                    post_login_route,
-                    post_register_route,
-                ]
-            } else {
-                routes![
-                    get_audiobooks_route,
-                    get_audiobook_route,
-                    get_audiobook_position_route,
-                    put_audiobook_position_route,
-                    post_login_route,
-                ]
-            },
-        )
+    rocket::custom(config).mount(
+        "/",
+        if register {
+            routes![
+                get_audiobooks_route,
+                get_audiobook_route,
+                get_audiobook_position_route,
+                put_audiobook_position_route,
+                post_login_route,
+                post_register_route,
+            ]
+        } else {
+            routes![
+                get_audiobooks_route,
+                get_audiobook_route,
+                get_audiobook_position_route,
+                put_audiobook_position_route,
+                post_login_route,
+            ]
+        },
+    )
 }
 
 /// Rocket route to retrieve the list of available audiobooks. Serves as a connector between the

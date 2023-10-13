@@ -10,7 +10,7 @@ RUN cargo build --release
 FROM debian:bullseye-slim
 
 RUN apt-get update --no-install-recommends && \
-    apt-get install -y libsqlite3-0
+    apt-get install -y ffmpeg libsqlite3-0
 
 WORKDIR /app
 

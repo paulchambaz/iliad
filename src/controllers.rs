@@ -21,16 +21,13 @@ use errors::IliadError;
 /// On success, the username associated with the given key. On failure, the relevant HTTP status
 /// indicating the nature of the error.
 pub fn get_auth(key: String) -> Result<String, Status> {
-    let conn = &mut match database::establish_connection() {
-        Ok(conn) => conn,
-        Err(_) => return Err(Status::ServiceUnavailable),
-    };
+    let conn = &mut database::establish_connection().map_err(|_| Status::ServiceUnavailable)?;
 
     match database::auth(conn, key) {
-        Ok(username) => return Ok(username),
-        Err(IliadError::DatabaseNotFound) => return Err(Status::Unauthorized),
-        Err(IliadError::DatabaseUnavailable) => return Err(Status::ServiceUnavailable),
-        Err(_) => return Err(Status::InternalServerError),
+        Ok(username) => Ok(username),
+        Err(IliadError::DatabaseNotFound) => Err(Status::Unauthorized),
+        Err(IliadError::DatabaseUnavailable) => Err(Status::ServiceUnavailable),
+        Err(_) => Err(Status::InternalServerError),
     }
 }
 
@@ -41,15 +38,12 @@ pub fn get_auth(key: String) -> Result<String, Status> {
 ///
 /// On success, a Json containing the list of audiobooks. On failure the HTTP error status code
 pub fn get_audiobooks() -> Result<Json<Vec<models::AudiobooksFmt>>, Status> {
-    let conn = &mut match database::establish_connection() {
-        Ok(conn) => conn,
-        Err(_) => return Err(Status::ServiceUnavailable),
-    };
+    let conn = &mut database::establish_connection().map_err(|_| Status::ServiceUnavailable)?;
 
     match database::get_audiobooks(conn) {
-        Ok(audiobooks) => return Ok(Json(audiobooks)),
-        Err(IliadError::DatabaseUnavailable) => return Err(Status::ServiceUnavailable),
-        Err(_) => return Err(Status::InternalServerError),
+        Ok(audiobooks) => Ok(Json(audiobooks)),
+        Err(IliadError::DatabaseUnavailable) => Err(Status::ServiceUnavailable),
+        Err(_) => Err(Status::InternalServerError),
     }
 }
 
@@ -64,10 +58,7 @@ pub fn get_audiobooks() -> Result<Json<Vec<models::AudiobooksFmt>>, Status> {
 /// On success, the binary data of the compressed archive of the audiobook. On failure the HTTP error
 /// status code
 pub fn get_audiobook(hash: String) -> Result<Vec<u8>, Status> {
-    let conn = &mut match database::establish_connection() {
-        Ok(conn) => conn,
-        Err(_) => return Err(Status::ServiceUnavailable),
-    };
+    let conn = &mut database::establish_connection().map_err(|_| Status::ServiceUnavailable)?;
 
     let path = match database::get_audiobook(conn, hash) {
         Ok(audiobook) => audiobook.path.into(),
@@ -78,7 +69,7 @@ pub fn get_audiobook(hash: String) -> Result<Vec<u8>, Status> {
 
     match scan::archive_directory(&path) {
         Ok(binary_data) => Ok(binary_data),
-        Err(_) => return Err(Status::InternalServerError),
+        Err(_) => Err(Status::InternalServerError),
     }
 }
 
@@ -98,16 +89,13 @@ pub fn get_audiobook_position(
     hash: String,
     username: String,
 ) -> Result<Json<models::PositionFmt>, Status> {
-    let conn = &mut match database::establish_connection() {
-        Ok(conn) => conn,
-        Err(_) => return Err(Status::ServiceUnavailable),
-    };
+    let conn = &mut database::establish_connection().map_err(|_| Status::ServiceUnavailable)?;
 
     match database::get_position(conn, hash, username) {
         Ok(position) => Ok(Json(position)),
-        Err(IliadError::DatabaseUnavailable) => return Err(Status::ServiceUnavailable),
-        Err(IliadError::DatabaseNotFound) => return Err(Status::NotFound),
-        Err(_) => return Err(Status::InternalServerError),
+        Err(IliadError::DatabaseUnavailable) => Err(Status::ServiceUnavailable),
+        Err(IliadError::DatabaseNotFound) => Err(Status::NotFound),
+        Err(_) => Err(Status::InternalServerError),
     }
 }
 
@@ -128,16 +116,13 @@ pub fn put_audiobook_position(
     username: String,
     position: Json<models::PositionFmt>,
 ) -> Result<Status, Status> {
-    let conn = &mut match database::establish_connection() {
-        Ok(conn) => conn,
-        Err(_) => return Err(Status::ServiceUnavailable),
-    };
+    let conn = &mut database::establish_connection().map_err(|_| Status::ServiceUnavailable)?;
 
     let Json(position) = position;
 
     match database::put_position(conn, hash, username, position) {
-        Ok(_) => return Ok(Status::Ok),
-        Err(_) => return Err(Status::InternalServerError),
+        Ok(_) => Ok(Status::Ok),
+        Err(_) => Err(Status::InternalServerError),
     }
 }
 
@@ -153,18 +138,16 @@ pub fn put_audiobook_position(
 /// On success, a Json containing the api key for the newly authenticated user. On failure, the
 /// HTTP error status code
 pub fn post_login(account: Json<models::Connection>) -> Result<Json<models::ApiKey>, Status> {
-    let conn = &mut match database::establish_connection() {
-        Ok(conn) => conn,
-        Err(_) => return Err(Status::ServiceUnavailable),
-    };
+    let conn = &mut database::establish_connection().map_err(|_| Status::ServiceUnavailable)?;
 
     let Json(account) = account;
 
     match database::login(conn, account.username, account.password) {
-        Ok(api_key) => return Ok(Json(api_key)),
-        Err(IliadError::DatabaseUnavailable) => return Err(Status::ServiceUnavailable),
-        Err(IliadError::DatabaseNotFound) => return Err(Status::Unauthorized),
-        Err(_) => return Err(Status::InternalServerError),
+        Ok(api_key) => Ok(Json(api_key)),
+        Err(IliadError::DatabaseUnavailable) => Err(Status::ServiceUnavailable),
+        Err(IliadError::DatabaseNotFound) => Err(Status::Unauthorized),
+        Err(IliadError::InvalidClientConnection) => Err(Status::Forbidden),
+        Err(_) => Err(Status::InternalServerError),
     }
 }
 
@@ -180,17 +163,14 @@ pub fn post_login(account: Json<models::Connection>) -> Result<Json<models::ApiK
 /// On success, a Json containing the api key for the newly authenticated user. On failure, the
 /// HTTP error status code
 pub fn post_register(account: Json<models::Connection>) -> Result<Json<models::ApiKey>, Status> {
-    let conn = &mut match database::establish_connection() {
-        Ok(conn) => conn,
-        Err(_) => return Err(Status::ServiceUnavailable),
-    };
+    let conn = &mut database::establish_connection().map_err(|_| Status::ServiceUnavailable)?;
 
     let Json(account) = account;
 
     match database::register(conn, account.username, account.password) {
-        Ok(api_key) => return Ok(Json(api_key)),
-        Err(IliadError::DatabaseUnavailable) => return Err(Status::ServiceUnavailable),
-        Err(IliadError::DatabaseAlreadyFound) => return Err(Status::Unauthorized),
-        Err(_) => return Err(Status::InternalServerError),
+        Ok(api_key) => Ok(Json(api_key)),
+        Err(IliadError::DatabaseUnavailable) => Err(Status::ServiceUnavailable),
+        Err(IliadError::DatabaseAlreadyFound) => Err(Status::Unauthorized),
+        Err(_) => Err(Status::InternalServerError),
     }
 }

@@ -14,6 +14,11 @@ pub struct Audiobook {
     pub hash: String,
     pub title: String,
     pub author: String,
+    pub date: String,
+    pub description: String,
+    pub genres: String,
+    pub duration: i32,
+    pub size: i32,
     pub path: String,
 }
 
@@ -24,6 +29,11 @@ pub struct NewAudiobook<'a> {
     pub hash: &'a str,
     pub title: &'a str,
     pub author: &'a str,
+    pub date: &'a str,
+    pub description: &'a str,
+    pub genres: &'a str,
+    pub duration: i32,
+    pub size: i32,
     pub path: &'a str,
 }
 
@@ -33,6 +43,11 @@ pub struct AudiobooksFmt {
     pub hash: String,
     pub title: String,
     pub author: String,
+    pub date: String,
+    pub description: String,
+    pub genres: String,
+    pub duration: i32,
+    pub size: i32,
 }
 
 /// Represents an audiobook for scanning purposes.
@@ -40,6 +55,11 @@ pub struct AudiobookScan {
     pub hash: String,
     pub title: String,
     pub author: String,
+    pub date: String,
+    pub description: String,
+    pub genres: String,
+    pub duration: i32,
+    pub size: i32,
     pub path: String,
 }
 

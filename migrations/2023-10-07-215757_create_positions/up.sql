@@ -1,4 +1,4 @@
-CREATE TABLE "positions" (
+CREATE TABLE IF NOT EXISTS "positions" (
   "hash"          TEXT NOT NULL,
   "username"      TEXT NOT NULL,
   "file"          TEXT NOT NULL,

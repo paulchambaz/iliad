@@ -3,10 +3,10 @@ use flate2::write::GzEncoder;
 use flate2::Compression;
 use log::warn;
 use ring::digest::{Context, SHA256};
-use serde_yaml;
 use std::env;
+use std::process::Command;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{PathBuf, Path};
 use tar::Builder;
 use walkdir::WalkDir;
 
@@ -29,14 +29,13 @@ pub fn scan_audiobooks_directory() -> Result<(), ()> {
 
     let mut audiobooks: Vec<AudiobookScan> = Vec::new();
 
+
     if let Ok(entries) = std::fs::read_dir(library_url) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                if path.is_dir() {
-                    if let Some(audiobook) = scan_audiobook_directory(&path) {
-                        audiobooks.push(audiobook);
-                    }
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                if let Some(audiobook) = scan_audiobook_directory(&path) {
+                    audiobooks.push(audiobook);
                 }
             }
         }
@@ -81,47 +80,34 @@ pub fn scan_audiobook_directory(dir: &PathBuf) -> Option<AudiobookScan> {
         return None;
     };
 
-    let path_str = dir.to_string_lossy().into_owned();
-
     match fs::read_to_string(info_path) {
         Ok(data) => match serde_yaml::from_str::<serde_yaml::Value>(&data) {
             Ok(metadata) => {
-                let title = match metadata.get("title") {
-                    Some(serde_yaml::Value::String(s)) => s.to_string(),
-                    _ => {
-                        warn!(
-                            "'title' not found or not a string in YAML at directory: {}",
-                            dir.display()
-                        );
-                        return None;
-                    }
-                };
-
-                let author = match metadata.get("author") {
-                    Some(serde_yaml::Value::String(s)) => s.to_string(),
-                    _ => {
-                        warn!(
-                            "'author' not found or not a string in YAML at directory: {}",
-                            dir.display()
-                        );
-                        return None;
-                    }
-                };
-
+                let title = extract_string_property(&metadata, "title", dir)?;
+                let author = extract_string_property(&metadata, "author", dir)?;
+                let date = extract_string_property(&metadata, "date", dir)?;
+                let description = extract_string_property(&metadata, "description", dir)?;
+                let genres = extract_string_property(&metadata, "genres", dir)?;
+                let duration = get_duration(&metadata, dir);
+                let size = get_directory_size(dir);
+                let path_str = dir.to_string_lossy().into_owned();
                 let hash = compute_hash(&title, &author);
 
-                let audiobook = AudiobookScan {
+                Some(AudiobookScan {
                     hash,
                     title,
                     author,
+                    date,
+                    description,
+                    genres,
+                    duration,
+                    size,
                     path: path_str,
-                };
-
-                Some(audiobook)
+                })
             }
             Err(e) => {
                 warn!(
-                    "Failed to parse info YAML at directory: {}. Error: {}",
+                    "Failed to parse info into YAML at directory: {}. Error: {}",
                     dir.display(),
                     e
                 );
@@ -130,12 +116,81 @@ pub fn scan_audiobook_directory(dir: &PathBuf) -> Option<AudiobookScan> {
         },
         Err(e) => {
             warn!(
-                "Failed to read info file at directory: {}. Error: {}",
+                "Failed to read into file at directory: {}. Error: {}",
                 dir.display(),
                 e
             );
             None
         }
+    }
+}
+
+fn extract_string_property(
+    metadata: &serde_yaml::Value,
+    property: &str,
+    dir: &Path,
+) -> Option<String> {
+    match metadata.get(property) {
+        Some(serde_yaml::Value::String(s)) => Some(s.to_string()),
+        _ => {
+            warn!(
+                "'{}' not found or not a string in YAML at directory: {}",
+                property,
+                dir.display()
+            );
+            None
+        }
+    }
+}
+
+pub fn get_directory_size(dir: &PathBuf) -> i32 {
+    WalkDir::new(dir)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter_map(|e| fs::metadata(e.path()).ok().map(|m| m.len() as i32))
+        .sum()
+}
+
+pub fn get_duration(metadata: &serde_yaml::Value, dir: &Path) -> i32 {
+    let chapters = metadata
+        .get("chapters")
+        .and_then(|c| c.as_sequence())
+        .cloned()
+        .unwrap_or_else(Vec::new);
+
+    chapters
+        .iter()
+        .filter_map(|chapter| chapter.get("file").and_then(|f| f.as_str()))
+        .map(|file_name| {
+            let file_path = dir.join(file_name);
+            get_audio_duration(&file_path)
+        })
+        .sum()
+}
+
+pub fn get_audio_duration(file_path: &Path) -> i32 {
+    // TODO: as can be expected this is extremely slow
+    // it needs to be rewritten to allow for a faster output
+    let output = Command::new("ffprobe")
+        .arg("-v")
+        .arg("error")
+        .arg("-show_entries")
+        .arg("format=duration")
+        .arg("-of")
+        .arg("default=noprint_wrappers=1:nokey=1")
+        .arg(file_path.as_os_str())
+        .output();
+
+    match output {
+        Ok(output_data) if output_data.status.success() => {
+            let output_str = String::from_utf8_lossy(&output_data.stdout);
+            let duration_str = output_str.trim();
+            match duration_str.parse::<f64>() {
+                Ok(duration) => duration.floor() as i32,
+                _ => 0,
+            }
+        },
+        _ => 0,
     }
 }
 
@@ -182,7 +237,7 @@ pub fn archive_directory(dir: &PathBuf) -> Result<Vec<u8>, IliadError> {
     let mut tar_builder = Builder::new(encoder);
 
     for file in files {
-        if let Err(_) = tar_builder.append_path_with_name(dir.join(&file), &file) {
+        if tar_builder.append_path_with_name(dir.join(&file), &file).is_err() {
             return Err(IliadError::ArchiveFailed);
         }
     }
@@ -194,6 +249,19 @@ pub fn archive_directory(dir: &PathBuf) -> Result<Vec<u8>, IliadError> {
 
     match encoder.finish() {
         Ok(compressed_data) => Ok(compressed_data),
-        Err(_) => return Err(IliadError::ArchiveFailed),
+        Err(_) => Err(IliadError::ArchiveFailed),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::get_audio_duration;
+    use std::path::Path;
+
+    #[test]
+    fn test_get_audio_duration() {
+        let duration = get_audio_duration(Path::new("./library/the-ancient-city-fustel-de-coulanges/introduction.opus"));
+
+        println!("Duration of the audio file: {}", duration);
     }
 }

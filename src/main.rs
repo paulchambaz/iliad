@@ -4,7 +4,6 @@ extern crate diesel;
 
 use diesel::RunQueryDsl;
 use dotenv::dotenv;
-use env_logger;
 use log::{error, info, warn, LevelFilter};
 use path_abs::PathAbs;
 use std::net::IpAddr;
@@ -112,7 +111,7 @@ fn check_env() -> (u64, IpAddr, u16, bool) {
             error!("ILIAD_SCAN_INTERVAL should be a positive integer");
             exit(1);
         });
-    if scan_interval <= 0 {
+    if scan_interval == 0 {
         error!("ILIAD_SCAN_INTERVAL should be a positive integer");
         exit(1);
     }
@@ -132,7 +131,7 @@ fn check_env() -> (u64, IpAddr, u16, bool) {
         error!("ILIAD_SERVER_PORT should be a valid port between 1 and 65535");
         exit(1);
     });
-    if server_port <= 0 {
+    if server_port == 0 {
         error!("ILIAD_SERVER_PORT should be a valid port between 1 and 65535");
         exit(1);
     }
@@ -191,12 +190,17 @@ pub fn ensure_migrations() {
 
     let query_audiobooks = r#"
     CREATE TABLE IF NOT EXISTS "audiobooks" (
-      "hash"   TEXT NOT NULL,
-      "title"  TEXT NOT NULL,
-      "author" TEXT NOT NULL,
-      "path"   TEXT NOT NULL,
+      "hash"        TEXT NOT NULL,
+      "title"       TEXT NOT NULL,
+      "author"      TEXT NOT NULL,
+      "date"        TEXT NOT NULL,
+      "description" TEXT NOT NULL,
+      "genres"      TEXT NOT NULL,
+      "duration"    INT  NOT NULL,
+      "size"        INT  NOT NULL,
+      "path"        TEXT NOT NULL,
       PRIMARY KEY ("hash")
-    );"#;
+    )"#;
 
     diesel::sql_query(query_accounts)
         .execute(conn)

@@ -13,6 +13,11 @@ diesel::table! {
         hash -> Text,
         title -> Text,
         author -> Text,
+        date -> Text,
+        description -> Text,
+        genres -> Text,
+        duration -> Integer,
+        size -> Integer,
         path -> Text,
     }
 }

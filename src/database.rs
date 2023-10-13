@@ -52,8 +52,8 @@ pub fn auth(conn: &mut SqliteConnection, key: String) -> Result<String, IliadErr
         .first::<Account>(conn)
     {
         Ok(account) => Ok(account.username),
-        Err(Error::NotFound) => return Err(IliadError::DatabaseNotFound),
-        Err(_) => return Err(IliadError::DatabaseUnavailable),
+        Err(Error::NotFound) => Err(IliadError::DatabaseNotFound),
+        Err(_) => Err(IliadError::DatabaseUnavailable),
     }
 }
 
@@ -83,6 +83,11 @@ pub fn update_audiobooks(
                 hash: &audiobook.hash,
                 title: &audiobook.title,
                 author: &audiobook.author,
+                date: &audiobook.date,
+                description: &audiobook.description,
+                genres: &audiobook.genres,
+                duration: audiobook.duration,
+                size: audiobook.size,
                 path: &audiobook.path,
             };
             new_audiobooks.push(new_audiobook);
@@ -119,9 +124,14 @@ pub fn get_audiobooks(conn: &mut SqliteConnection) -> Result<Vec<AudiobooksFmt>,
                 hash: book.hash,
                 title: book.title,
                 author: book.author,
+                date: book.date,
+                description: book.description,
+                genres: book.genres,
+                duration: book.duration,
+                size: book.size,
             })
             .collect()),
-        Err(_) => return Err(IliadError::DatabaseUnavailable),
+        Err(_) => Err(IliadError::DatabaseUnavailable),
     }
 }
 
@@ -176,8 +186,8 @@ pub fn get_position(
             file: position.file,
             position: position.position,
         }),
-        Err(Error::NotFound) => return Err(IliadError::DatabaseNotFound),
-        Err(_) => return Err(IliadError::DatabaseUnavailable),
+        Err(Error::NotFound) => Err(IliadError::DatabaseNotFound),
+        Err(_) => Err(IliadError::DatabaseUnavailable),
     }
 }
 
@@ -213,7 +223,7 @@ pub fn put_position(
 
     let now = Utc::now().naive_utc();
 
-    return if exists {
+    if exists {
         let update_position = UpdatePosition {
             hash: &hash,
             username: &username,
@@ -248,9 +258,9 @@ pub fn put_position(
             .execute(conn)
         {
             Ok(_) => Ok(IliadError::Ok),
-            Err(_) => return Err(IliadError::DatabaseUnavailable),
+            Err(_) => Err(IliadError::DatabaseUnavailable),
         }
-    };
+    }
 }
 
 pub fn login(
@@ -296,13 +306,13 @@ pub fn register(
         Err(_) => return Err(IliadError::DatabaseUnavailable),
     };
 
-    let mut key: String;
+    let mut key = String::with_capacity(32);
     let mut rng = rand::thread_rng();
 
     loop {
-        key = (0..16)
-            .map(|_| format!("{:02x}", rng.gen::<u8>()))
-            .collect();
+        for _ in 0..16 {
+            key.push_str(&format!("{:02x}", rng.gen::<u8>()));
+        }
 
         if !keys.contains(&key) {
             break;
@@ -315,10 +325,9 @@ pub fn register(
         key: &key,
     };
 
-    if let Err(_) = diesel::insert_into(accounts::table)
+    if diesel::insert_into(accounts::table)
         .values(new_account)
-        .execute(conn)
-    {
+        .execute(conn).is_err() {
         return Err(IliadError::DatabaseUnavailable);
     };
 
