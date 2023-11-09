@@ -302,8 +302,8 @@ pub fn register(
         .select(accounts::dsl::key)
         .load::<String>(conn)
     {
-        Ok(keys) => keys,
-        Err(_) => return Err(IliadError::DatabaseUnavailable),
+            Ok(keys) => keys,
+            Err(_) => return Err(IliadError::DatabaseUnavailable),
     };
 
     let mut key = String::with_capacity(32);
@@ -330,7 +330,7 @@ pub fn register(
         .execute(conn).is_err() {
         return Err(IliadError::DatabaseUnavailable);
     };
-
+    
     Ok(ApiKey { key })
 }
 
@@ -358,4 +358,10 @@ pub fn cleanup_positions() -> Result<(), ()> {
         Ok(_) => Ok(()),
         Err(_) => Err(()),
     }
+}
+
+
+pub fn encrypt(data: &str, password: &str) -> String {
+    // use AEAD algorithm and crate
+    // use pbkdf2 for the creating the password hash
 }
