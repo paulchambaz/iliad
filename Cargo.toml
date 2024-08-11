@@ -1,0 +1,23 @@
+[package]
+name = "iliad"
+description = "iliad is a audiobook server"
+authors = ["Paul Chambaz <paul.chambaz@tuta.com>"]
+homepage = "https://github.com/paulchambaz/iliad"
+version = "1.0.2"
+edition = "2021"
+include = ["src/**/*", "README.md"]
+license-file = "LICENSE"
+readme = "README.md"
+documentation = "https://docs.rs/iliad"
+keywords = []
+
+[dependencies]
+actix-web = "4.9.0"
+anyhow = "1.0.86"
+dotenv = "0.15.0"
+sqlx = { version = "0.8.0", features = ["sqlite", "runtime-tokio-native-tls"] }
+thiserror = "1.0.63"
+
+[[bin]]
+name = "iliad"
+path = "src/main.rs"
