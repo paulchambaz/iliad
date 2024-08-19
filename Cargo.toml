@@ -14,9 +14,11 @@ keywords = []
 [dependencies]
 actix-web = "4.9.0"
 anyhow = "1.0.86"
+chrono = { version = "0.4.38", features = ["serde"] }
 dotenv = "0.15.0"
+futures = "0.3.30"
+serde = "1.0.206"
 sqlx = { version = "0.8.0", features = ["sqlite", "runtime-tokio-native-tls"] }
-thiserror = "1.0.63"
 
 [[bin]]
 name = "iliad"

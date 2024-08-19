@@ -1,46 +1,37 @@
 use dotenv::dotenv;
 use std::env;
-use std::path::PathBuf;
 
+#[derive(Debug, Clone)]
 pub struct Config {
-    pub db_path: PathBuf,
-    pub library_path: PathBuf,
-    pub scan_interval: u64,
-    pub cleanup_interval: u64,
+    pub db_path: String,
+    pub library_path: String,
     pub server_address: String,
     pub server_port: u16,
-    pub allow_register: bool,
+    pub public_register: bool,
+    pub admin_password: String,
 }
 
 impl Config {
-    pub fn from_env() -> Self {
+    pub fn new() -> Self {
         dotenv().ok();
 
-        Self {
+        Config {
             db_path: env::var("ILIAD_DB_PATH")
-                .unwrap_or_else(|_| "/app/instance/iliad.db".to_string())
-                .into(),
+                .unwrap_or_else(|_| "/app/instance/iliad.db".to_string()),
             library_path: env::var("ILIAD_LIBRARY_PATH")
-                .unwrap_or_else(|_| "/app/instance/library".to_string())
-                .into(),
-            scan_interval: env::var("ILIAD_SCAN_INTERVAL")
-                .unwrap_or_else(|_| "10".to_string())
-                .parse()
-                .expect("Invalid ILIAD_SCAN_INTERVAL"),
-            cleanup_interval: env::var("ILIAD_CLEANUP_INTERVAL")
-                .unwrap_or_else(|_| "365".to_string())
-                .parse()
-                .expect("Invalid ILIAD_CLEANUP_INTERVAL"),
+                .unwrap_or_else(|_| "/app/instance/library".to_string()),
             server_address: env::var("ILIAD_SERVER_ADDRESS")
                 .unwrap_or_else(|_| "0.0.0.0".to_string()),
             server_port: env::var("ILIAD_SERVER_PORT")
-                .unwrap_or_else(|_| "8080".to_string())
+                .unwrap_or_else(|_| "9090".to_string())
                 .parse()
-                .expect("Invalid ILIAD_SERVER_PORT"),
-            allow_register: env::var("ILIAD_ALLOW_REGISTER")
+                .unwrap(),
+            public_register: env::var("ILIAD_PUBLIC_REGISTER")
                 .unwrap_or_else(|_| "false".to_string())
                 .parse()
-                .expect("Invalid ILIAD_ALLOW_REGISTER"),
+                .unwrap(),
+            admin_password: env::var("ILIAD_ADMIN_PASSWORD")
+                .expect("ILIAD_ADMIN_PASSWORD must be set"),
         }
     }
 }

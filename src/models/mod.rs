@@ -1,3 +1,3 @@
-mod audiobook;
-mod position;
-mod user;
+pub mod audiobook;
+pub mod position;
+pub mod user;
