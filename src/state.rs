@@ -32,11 +32,9 @@ impl AppState {
         db::init_schema(&db).await?;
 
         let mut regular_tokens = HashMap::new();
-        regular_tokens.insert("tok1".to_string(), "user1".to_string());
-        regular_tokens.insert("tok2".to_string(), "user2".to_string());
-        regular_tokens.insert("tok3".to_string(), "user3".to_string());
+        regular_tokens.insert("paul-token".to_string(), "paul".to_string());
 
-        let admin_tokens = vec!["adm1".to_string(), "adm2".to_string()];
+        let admin_tokens = vec!["admin-token".to_string()];
 
         Ok(Self {
             db,

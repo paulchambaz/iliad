@@ -3,7 +3,7 @@ name = "iliad"
 description = "iliad is a audiobook server"
 authors = ["Paul Chambaz <paul.chambaz@tuta.com>"]
 homepage = "https://github.com/paulchambaz/iliad"
-version = "1.0.2"
+version = "1.0.0"
 edition = "2021"
 include = ["src/**/*", "README.md"]
 license-file = "LICENSE"
@@ -17,6 +17,8 @@ anyhow = "1.0.86"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenv = "0.15.0"
 futures = "0.3.30"
+md5 = "0.7.0"
+rand = "0.8.5"
 serde = "1.0.206"
 sqlx = { version = "0.8.0", features = ["sqlite", "runtime-tokio-native-tls"] }
 
