@@ -151,7 +151,7 @@ fn create_archive(
     dir: &PathBuf,
     force: bool,
 ) -> Result<()> {
-    let archive_path = dir.join(format!("{}.tar.gz", audiobook.hash));
+    let archive_path = dir.join("archive.tar.gz");
 
     if !force && archive_path.exists() {
         return Ok(());

@@ -30,13 +30,12 @@ pub async fn init_schema(pool: &SqlitePool) -> Result<()> {
         );
 
         CREATE TABLE IF NOT EXISTS positions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            audiobook_id INTEGER NOT NULL,
+            audiobook_hash TEXT NOT NULL,
+            username TEXT NOT NULL,
+            file TEXT NOT NULL,
             position INTEGER NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id),
-            FOREIGN KEY (audiobook_id) REFERENCES audiobooks(id)
+            PRIMARY KEY (audiobook_hash, username)
         );
         "#,
     )

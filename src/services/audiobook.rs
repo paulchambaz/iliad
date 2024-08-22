@@ -57,7 +57,7 @@ pub async fn get_audiobook_archive(hash: String, state: &AppState) -> Result<(St
         .context("Failed to fetch audiobook from database")?;
 
     let audiobook_path = PathBuf::from(audiobook.path);
-    let archive_path = audiobook_path.join(format!("{}.tar.gz", &audiobook.hash));
+    let archive_path = audiobook_path.join("archive.tar.gz");
 
     let archive_content = fs::read(&archive_path).context("Failed to read archive file")?;
 

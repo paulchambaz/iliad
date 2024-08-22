@@ -3,9 +3,9 @@ use sqlx::FromRow;
 
 #[derive(Debug, FromRow)]
 pub struct Position {
-    pub id: i64,
-    pub user_id: i64,
-    pub audiobook_id: i64,
-    pub position: i32,
+    pub audiobook_hash: String,
+    pub username: String,
+    pub file: String,
+    pub position: u64,
     pub timestamp: NaiveDateTime,
 }
