@@ -18,4 +18,6 @@ WORKDIR /app
 COPY --from=builder /tmp/nix-store-closure /nix/store
 COPY --from=builder /tmp/build/result /app
 
+ENV PATH="/app/bin:${PATH}"
+
 ENTRYPOINT ["iliad"]

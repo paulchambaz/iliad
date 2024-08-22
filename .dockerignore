@@ -1,0 +1,13 @@
+.direnv
+docker-compose.yml
+Dockerfile
+.dockerignore
+.env
+.envrc
+.git
+.gitignore
+instance
+justfile
+LICENSE
+README.md
+target

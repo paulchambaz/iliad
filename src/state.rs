@@ -19,7 +19,6 @@ pub struct AppState {
 
 impl AppState {
     pub async fn new(config: &crate::config::Config) -> Result<Self> {
-        // Ensure parent directories exist
         if let Some(db_dir) = PathBuf::from(&config.db_path).parent() {
             fs::create_dir_all(db_dir).context("Failed to create database directory")?;
         }
@@ -27,21 +26,15 @@ impl AppState {
         let library_path = PathBuf::from(&config.library_path);
         fs::create_dir_all(&library_path).context("Failed to create library directory")?;
 
-        // Connect to the database and initialize schema
         let db = db::connect(&config.db_path).await?;
         db::init_schema(&db).await?;
-
-        let mut regular_tokens = HashMap::new();
-        regular_tokens.insert("paul-token".to_string(), "paul".to_string());
-
-        let admin_tokens = vec!["admin-token".to_string()];
 
         Ok(Self {
             db,
             library_path,
             admin_password: config.admin_password.clone(),
-            regular_tokens: Arc::new(Mutex::new(regular_tokens)),
-            admin_tokens: Arc::new(Mutex::new(admin_tokens)),
+            regular_tokens: Arc::new(Mutex::new(HashMap::new())),
+            admin_tokens: Arc::new(Mutex::new(Vec::new())),
         })
     }
 }

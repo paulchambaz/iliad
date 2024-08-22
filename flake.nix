@@ -31,7 +31,7 @@
         pname = "iliad";
         version = "1.0.0";
         src = ./.;
-        cargoHash = "sha256-/wW9QHYmpk9hnjHrnJQTGl4Cg1+WxX7TQuBU+Olf2Js=";
+        cargoHash = "sha256-oVGhHeDw0ASeXjaCpLS5dcodZZwt4CqxkHv9sCE4BDs=";
 
         nativeBuildInputs = buildPkgs;
         buildInputs = libPkgs;
