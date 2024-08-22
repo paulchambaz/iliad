@@ -1,11 +1,26 @@
 use actix_web::{web, HttpResponse};
 
-use crate::state::AppState;
+use crate::{
+    services::library::{cleanup, scan_library},
+    state::AppState,
+};
 
 pub async fn put_library_scan(state: web::Data<AppState>) -> HttpResponse {
-    HttpResponse::Ok().body("Put library scan route")
+    match scan_library(&state).await {
+        Ok(_) => HttpResponse::Ok().into(),
+        Err(e) => {
+            eprintln!("Register error: {:?}", e);
+            HttpResponse::InternalServerError().body("Internal server error")
+        }
+    }
 }
 
 pub async fn put_library_cleanup(state: web::Data<AppState>) -> HttpResponse {
-    HttpResponse::Ok().body("Put library cleanup")
+    match cleanup(&state).await {
+        Ok(_) => HttpResponse::Ok().into(),
+        Err(e) => {
+            eprintln!("Register error: {:?}", e);
+            HttpResponse::InternalServerError().body("Internal server error")
+        }
+    }
 }

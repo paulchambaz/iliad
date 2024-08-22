@@ -1,5 +1,6 @@
 use crate::{
     inputs::auth::{AdminLogin, RegularLogin, RegularRegister},
+    models::user::User,
     outputs::auth::AuthToken,
     state::AppState,
 };
@@ -9,18 +10,18 @@ use rand::Rng;
 pub async fn login(input: RegularLogin, state: &AppState) -> Result<AuthToken> {
     let db = &state.db;
 
-    let user = sqlx::query_as::<_, (i64, String)>(
-        "SELECT id, password_hash FROM users WHERE username = ?",
+    let user = sqlx::query_as::<_, User>(
+        "SELECT id, username, password_hash FROM users WHERE username = ?",
     )
     .bind(&input.username)
     .fetch_optional(db)
     .await?;
 
-    let (_, stored_hash) = user.ok_or_else(|| anyhow!("Username does not exist"))?;
+    let user = user.ok_or_else(|| anyhow!("Username does not exist"))?;
 
     let password_hash = format!("{:x}", md5::compute(&input.password));
 
-    if password_hash != stored_hash {
+    if password_hash != user.password_hash {
         return Err(anyhow!("Invalid password"));
     }
 
@@ -54,12 +55,14 @@ pub async fn admin_login(input: AdminLogin, state: &AppState) -> Result<AuthToke
 pub async fn register(input: RegularRegister, state: &AppState) -> Result<AuthToken> {
     let db = &state.db;
 
-    let existing_user = sqlx::query("SELECT id FROM users WHERE username = ?")
-        .bind(&input.username)
-        .fetch_optional(db)
-        .await?;
+    let user = sqlx::query_as::<_, User>(
+        "SELECT id, username, password_hash FROM users WHERE username = ?",
+    )
+    .bind(&input.username)
+    .fetch_optional(db)
+    .await?;
 
-    if existing_user.is_some() {
+    if user.is_some() {
         return Err(anyhow!("Username already exists"));
     }
 
