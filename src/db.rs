@@ -12,8 +12,7 @@ pub async fn init_schema(pool: &SqlitePool) -> Result<()> {
     sqlx::query(
         r#"
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL UNIQUE,
+            username TEXT PRIMARY KEY,
             password_hash TEXT NOT NULL
         );
 
@@ -26,14 +25,16 @@ pub async fn init_schema(pool: &SqlitePool) -> Result<()> {
             genres TEXT NOT NULL,
             duration INTEGER NOT NULL,
             size INTEGER NOT NULL,
-            path TEXT NOT NULL UNIQUE
+            path TEXT NOT NULL UNIQUE,
+            final_chapter_index INTEGER,
+            final_chapter_position INTEGER
         );
 
         CREATE TABLE IF NOT EXISTS positions (
             audiobook_hash TEXT NOT NULL,
             username TEXT NOT NULL,
-            file TEXT NOT NULL,
-            position INTEGER NOT NULL,
+            chapter_index INTEGER NOT NULL,
+            chapter_position INTEGER NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (audiobook_hash, username)
         );

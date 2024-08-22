@@ -10,12 +10,10 @@ use rand::Rng;
 pub async fn login(input: RegularLogin, state: &AppState) -> Result<AuthToken> {
     let db = &state.db;
 
-    let user = sqlx::query_as::<_, User>(
-        "SELECT id, username, password_hash FROM users WHERE username = ?",
-    )
-    .bind(&input.username)
-    .fetch_optional(db)
-    .await?;
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
+        .bind(&input.username)
+        .fetch_optional(db)
+        .await?;
 
     let user = user.ok_or_else(|| anyhow!("Username does not exist"))?;
 
@@ -54,12 +52,10 @@ pub async fn admin_login(input: AdminLogin, state: &AppState) -> Result<AuthToke
 pub async fn register(input: RegularRegister, state: &AppState) -> Result<AuthToken> {
     let db = &state.db;
 
-    let user = sqlx::query_as::<_, User>(
-        "SELECT id, username, password_hash FROM users WHERE username = ?",
-    )
-    .bind(&input.username)
-    .fetch_optional(db)
-    .await?;
+    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
+        .bind(&input.username)
+        .fetch_optional(db)
+        .await?;
 
     if user.is_some() {
         return Err(anyhow!("Username already exists"));

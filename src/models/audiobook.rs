@@ -11,4 +11,6 @@ pub struct Audiobook {
     pub duration: u64,
     pub size: u64,
     pub path: String,
+    pub final_chapter_index: u32,
+    pub final_chapter_position: u64,
 }

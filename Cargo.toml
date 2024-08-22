@@ -25,7 +25,7 @@ serde_yaml = "0.9.34"
 sha2 = "0.10.8"
 sha256 = "1.5.0"
 slug = "0.1.6"
-sqlx = { version = "0.8.0", features = ["sqlite", "runtime-tokio-native-tls"] }
+sqlx = { version = "0.8.0", features = ["sqlite", "runtime-tokio-native-tls", "chrono"] }
 symphonia = { version = "0.5.4", features = ["all"] }
 tar = "0.4.41"
 

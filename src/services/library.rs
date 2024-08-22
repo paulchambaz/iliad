@@ -1,4 +1,5 @@
 use anyhow::{bail, Context, Result};
+use chrono::Utc;
 use flate2::write::GzEncoder;
 use flate2::Compression;
 use serde_yaml::Value;
@@ -49,6 +50,29 @@ pub async fn scan_library(state: &AppState, force: bool) -> Result<()> {
 }
 
 pub async fn cleanup(state: &AppState) -> Result<()> {
+    // Calculate the cutoff date (3 years ago from now)
+    let cutoff_date = Utc::now().naive_utc() - chrono::Duration::days(3 * 365);
+
+    // Execute the delete query for old entries
+    let _ = sqlx::query("DELETE FROM positions WHERE timestamp < ?")
+        .bind(cutoff_date)
+        .execute(&state.db)
+        .await?;
+
+    // Execute the delete query for finished books
+    let _ = sqlx::query(
+        "DELETE FROM positions 
+         WHERE EXISTS (
+             SELECT 1 FROM audiobooks 
+             WHERE audiobooks.hash = positions.audiobook_hash
+             AND (positions.chapter_index > audiobooks.final_chapter_index 
+                  OR (positions.chapter_index = audiobooks.final_chapter_index 
+                      AND positions.chapter_position >= audiobooks.final_chapter_position))
+         )",
+    )
+    .execute(&state.db)
+    .await?;
+
     Ok(())
 }
 
@@ -95,6 +119,8 @@ fn scan_audiobook(dir: &PathBuf, force: bool) -> Result<Audiobook> {
     let mut audiobook_chapters: Vec<AudiobookChapter> = Vec::new();
     let mut total_duration = Duration::new(0, 0);
     let mut total_size = fs::metadata(&info_path)?.len();
+    let mut final_chapter_index = 0;
+    let mut final_chapter_position = 0;
 
     for chapter in chapters {
         let chapter_title = chapter["title"]
@@ -124,6 +150,23 @@ fn scan_audiobook(dir: &PathBuf, force: bool) -> Result<Audiobook> {
         audiobook_chapters.push(chapter);
     }
 
+    let five_minutes = Duration::from_secs(5 * 60);
+    if total_duration > five_minutes {
+        let mut remaining = five_minutes;
+        for (index, chapter) in audiobook_chapters.iter().enumerate().rev() {
+            let chapter_duration = compute_audio_duration(&dir.join(&chapter.path))?;
+            if chapter_duration > remaining {
+                final_chapter_index = index as u32;
+                final_chapter_position = (chapter_duration - remaining).as_millis() as u64;
+                break;
+            }
+            remaining -= chapter_duration;
+        }
+    } else {
+        final_chapter_index = 0;
+        final_chapter_position = 0;
+    }
+
     let path = dir.to_string_lossy().into_owned();
     let hash = compute_hash(author, title, date);
 
@@ -137,6 +180,8 @@ fn scan_audiobook(dir: &PathBuf, force: bool) -> Result<Audiobook> {
         duration: total_duration.as_secs(),
         size: total_size,
         path,
+        final_chapter_index,
+        final_chapter_position,
     };
 
     create_archive(&audiobook, audiobook_chapters, &info_path, dir, force)?;
@@ -251,7 +296,7 @@ fn compute_hash(author: &str, title: &str, date: i32) -> String {
 
 async fn update_audiobook(db: &SqlitePool, audiobook: &Audiobook) -> Result<()> {
     sqlx::query(
-        "UPDATE audiobooks SET title = ?, author = ?, date = ?, description = ?, genres = ?, duration = ?, size = ?, path = ? WHERE hash = ?"
+        "UPDATE audiobooks SET title = ?, author = ?, date = ?, description = ?, genres = ?, duration = ?, size = ?, path = ?, final_chapter_index = ?, final_chapter_position = ? WHERE hash = ?"
     )
     .bind(&audiobook.title)
     .bind(&audiobook.author)
@@ -261,6 +306,8 @@ async fn update_audiobook(db: &SqlitePool, audiobook: &Audiobook) -> Result<()> 
     .bind(audiobook.duration as i64)
     .bind(audiobook.size as i64)
     .bind(&audiobook.path)
+    .bind(audiobook.final_chapter_index)
+    .bind(audiobook.final_chapter_position as i64)
     .bind(&audiobook.hash)
     .execute(db)
     .await?;
@@ -269,7 +316,7 @@ async fn update_audiobook(db: &SqlitePool, audiobook: &Audiobook) -> Result<()> 
 
 async fn create_audiobook(db: &SqlitePool, audiobook: &Audiobook) -> Result<()> {
     sqlx::query(
-        "INSERT INTO audiobooks (hash, title, author, date, description, genres, duration, size, path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        "INSERT INTO audiobooks (hash, title, author, date, description, genres, duration, size, path, final_chapter_index, final_chapter_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     )
     .bind(&audiobook.hash)
     .bind(&audiobook.title)
@@ -280,6 +327,8 @@ async fn create_audiobook(db: &SqlitePool, audiobook: &Audiobook) -> Result<()> 
     .bind(audiobook.duration as i64)
     .bind(audiobook.size as i64)
     .bind(&audiobook.path)
+    .bind(audiobook.final_chapter_index)
+    .bind(audiobook.final_chapter_position as i64)
     .execute(db)
     .await?;
     Ok(())
