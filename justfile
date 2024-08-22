@@ -21,3 +21,12 @@ fmt:
 
 vhs:
   vhs demo.tape
+
+build-docker:
+  docker build -t paulchambaz/iliad:latest .
+
+run-docker:
+  docker compose up
+
+publish-docker:
+  docker push paulchambaz/iliad:latest
