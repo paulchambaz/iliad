@@ -1,28 +1,216 @@
-ILIAD(1) "https://github.com/paulchambaz/iliad" "General Commands Manual"
+# iliad(1) "https://github.com/username/iliad" "General Commands Manual"
 
-# NAME
+## NAME
 
-*iliad* - 
+*iliad* - Audio book server and library manager
 
-# SYNOPSIS
+## SYNOPSIS
 
-*iliad* [OPTIONS] [COMMAND]
+*iliad* [OPTIONS]
 
-# DESCRIPTION
+## DESCRIPTION
 
+*iliad* is a lightweight, self-hosted audio book server and library manager. It provides a RESTful API for managing and accessing your audio book collection, with features including user authentication, library scanning, and playback position tracking.
 
-# CONFIGURATION
+Key features include:
+- User authentication with regular and admin accounts
+- Automatic library scanning and metadata extraction
+- Audio book playback position tracking
+- RESTful API for client applications
 
+## CONFIGURATION
 
-# OPTIONS
+*iliad* uses environment variables for configuration. These can be set in a *.env* file in the same directory as the executable, or as system environment variables.
 
+*ILIAD_DB_PATH*
+	Path to the SQLite database file [default: /app/instance/iliad.db]
 
-# COMMANDS
+*ILIAD_LIBRARY_PATH*
+	Path to the audio book library directory [default: /app/instance/library]
 
+*ILIAD_SERVER_ADDRESS*
+	IP address for the server to bind to [default: 0.0.0.0]
 
-# NOTES
+*ILIAD_SERVER_PORT*
+	Port number for the server to listen on [default: 9090]
 
+*ILIAD_PUBLIC_REGISTER*
+	Allow public user registration without admin authentication [default: false]
 
-# AUTHORS
+*ILIAD_ADMIN_PASSWORD*
+	Password for admin authentication (required)
 
-This program was written by Paul Chambaz in 2024. It is licensed under the GPLv3, for more information, please read the *LICENSE* file.
+## API ENDPOINTS
+
+All authenticated requests should include an "Authorization" header with the format "Bearer {token}", where {token} is the token received from the login or register endpoints.
+
+### Authentication
+
+*POST /auth/login*
+	Log in as a regular user
+	Input:
+	```json
+	{
+	  "username": "string",
+	  "password": "string"
+	}
+	```
+	Output:
+	```json
+	{
+	  "token": "string"
+	}
+	```
+
+*POST /auth/admin*
+	Log in as an admin user
+	Input:
+	```json
+	{
+	  "password": "string"
+	}
+	```
+	Output:
+	```json
+	{
+	  "token": "string"
+	}
+	```
+
+*POST /auth/register*
+	Register a new user (requires admin authentication if ILIAD_PUBLIC_REGISTER is false)
+	Input:
+	```json
+	{
+	  "username": "string",
+	  "password": "string"
+	}
+	```
+	Output:
+	```json
+	{
+	  "token": "string"
+	}
+	```
+
+### Audio Books
+
+*GET /audiobooks*
+	List all audio books (requires authentication)
+	Input: None
+	Output:
+	```json
+	[
+	  {
+	    "hash": "string",
+	    "title": "string",
+	    "author": "string"
+	  },
+	  ...
+	]
+	```
+
+*GET /audiobooks/{hash}*
+	Get details for a specific audio book (requires authentication)
+	Input: None
+	Output:
+	```json
+	{
+	  "hash": "string",
+	  "title": "string",
+	  "author": "string",
+	  "date": "integer",
+	  "description": "string",
+	  "genres": ["string", ...],
+	  "duration": "integer",
+	  "size": "integer"
+	}
+	```
+
+*GET /audiobooks/{hash}/download*
+	Download an audio book archive (requires authentication)
+	Input: None
+	Output: Binary file (application/octet-stream)
+	        Filename format: "{author-slug}-{title-slug}-{date}.tar.gz"
+
+### Playback Positions
+
+*GET /positions/{hash}*
+	Get the current playback position for an audio book (requires authentication)
+	Input: None
+	Output:
+	```json
+	{
+	  "chapter_index": "integer",
+	  "chapter_position": "integer"
+	}
+	```
+
+*PUT /positions/{hash}*
+	Update the playback position for an audio book (requires authentication)
+	Input:
+	```json
+	{
+	  "chapter_index": "integer",
+	  "chapter_position": "integer",
+	  "client_timestamp": "integer"
+	}
+	```
+	Output: 200 OK (no content)
+
+### Library Management
+
+*PUT /library/scan*
+	Trigger a library scan (requires admin authentication)
+	Input: None
+	Output: 200 OK (no content)
+
+*PUT /library/cleanup*
+	Clean up old playback positions (requires admin authentication)
+	Input: None
+	Output: 200 OK (no content)
+
+## AUDIO BOOK DIRECTORY STRUCTURE
+
+Each audio book in the library should be in its own directory with the following structure:
+
+```
+/path/to/library/
+└── Audio Book Title/
+    ├── info.yaml
+    ├── chapter1.mp3
+    ├── chapter2.mp3
+    └── ...
+```
+
+The *info.yaml* file should contain metadata about the audio book in the following format:
+
+```yaml
+title: "Audio Book Title"
+author: "Author Name"
+date: 2023
+description: "A brief description of the audio book"
+genres:
+  - "Genre 1"
+  - "Genre 2"
+chapters:
+  - title: "Chapter 1 Title"
+    path: "chapter1.mp3"
+  - title: "Chapter 2 Title"
+    path: "chapter2.mp3"
+```
+
+## NOTES
+
+- *iliad* uses SQLite for its database, which is created automatically if it doesn't exist.
+- The server automatically scans the library directory on startup.
+- Audio book files are not served directly; instead, they are packaged into a .tar.gz archive for download.
+- Playback positions older than 3 years are automatically cleaned up.
+
+## AUTHORS
+
+This program was created by [Your Name] in [Year]. It is licensed under [License], for more information, please read the *LICENSE* file in the project repository.
+
+## SEE ALSO
+
+sqlite3(1), tar(1), gzip(1)
