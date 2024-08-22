@@ -18,11 +18,15 @@ pub async fn init_schema(pool: &SqlitePool) -> Result<()> {
         );
 
         CREATE TABLE IF NOT EXISTS audiobooks (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            hash TEXT PRIMARY KEY,
             title TEXT NOT NULL,
             author TEXT NOT NULL,
-            file_path TEXT NOT NULL UNIQUE,
-            hash TEXT NOT NULL UNIQUE
+            date INTEGER NOT NULL,
+            description TEXT NOT NULL,
+            genres TEXT NOT NULL,
+            duration INTEGER NOT NULL,
+            size INTEGER NOT NULL,
+            path TEXT NOT NULL UNIQUE
         );
 
         CREATE TABLE IF NOT EXISTS positions (

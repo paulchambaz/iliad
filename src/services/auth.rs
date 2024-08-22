@@ -48,7 +48,6 @@ pub async fn admin_login(input: AdminLogin, state: &AppState) -> Result<AuthToke
         .map_err(|_| anyhow!("Could not access admin_tokens"))?;
     admin_tokens.push(token.clone());
 
-    // return the token
     Ok(AuthToken { token })
 }
 

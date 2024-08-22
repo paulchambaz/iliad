@@ -8,11 +8,11 @@ pub async fn get_position(
     req: HttpRequest,
 ) -> HttpResponse {
     let hash = path.into_inner();
-    let user = req
-        .headers()
-        .get("user")
-        .and_then(|h| h.to_str().ok())
-        .unwrap_or("unknown");
+
+    let user = match req.headers().get("user").and_then(|h| h.to_str().ok()) {
+        Some(user) => user,
+        None => return HttpResponse::InternalServerError().body("Internal server error"),
+    };
 
     HttpResponse::Ok().body(format!("Get position route: {} to {}", hash, user))
 }
@@ -24,11 +24,11 @@ pub async fn put_position(
     // body: web::Json<YourJsonType>
 ) -> HttpResponse {
     let hash = path.into_inner();
-    let user = req
-        .headers()
-        .get("user")
-        .and_then(|h| h.to_str().ok())
-        .unwrap_or("unknown");
+
+    let user = match req.headers().get("user").and_then(|h| h.to_str().ok()) {
+        Some(user) => user,
+        None => return HttpResponse::InternalServerError().body("Internal server error"),
+    };
 
     HttpResponse::Ok().body(format!("Put audiobook route: {} to {}", hash, user))
 }

@@ -2,9 +2,13 @@ use sqlx::FromRow;
 
 #[derive(Debug, FromRow)]
 pub struct Audiobook {
-    pub id: i64,
+    pub hash: String, // primary key
     pub title: String,
     pub author: String,
-    pub file_path: String,
-    pub hash: String,
+    pub date: i32,
+    pub description: String,
+    pub genres: String,
+    pub duration: u64,
+    pub size: u64,
+    pub path: String,
 }

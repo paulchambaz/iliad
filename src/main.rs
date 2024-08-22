@@ -16,6 +16,7 @@ use handlers::auth::{post_auth_admin, post_auth_login, post_auth_register};
 use handlers::library::{put_library_cleanup, put_library_scan};
 use handlers::position::{get_position, put_position};
 use middlewares::auth::{admin_auth, standard_auth};
+use services::library::scan_library;
 use state::AppState;
 
 #[actix_web::main]
@@ -24,6 +25,11 @@ async fn main() -> std::io::Result<()> {
     let state = AppState::new(&config)
         .await
         .expect("Failed to initialize application state");
+
+    if let Err(e) = scan_library(&state, false).await {
+        eprintln!("Error during initial library scan: {}", e);
+        std::process::exit(1);
+    }
 
     println!(
         "Starting server at {}:{}",
