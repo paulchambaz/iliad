@@ -10,7 +10,9 @@
     flake-utils,
   }:
     flake-utils.lib.eachDefaultSystem (system: let
-      pkgs = nixpkgs.legacyPackages.${system};
+      pkgs = import nixpkgs {
+        inherit system;
+      };
 
       buildPkgs = with pkgs; [
         pkg-config
@@ -22,16 +24,18 @@
       ];
 
       devPkgs = with pkgs; [
-        just
-        cargo-tarpaulin
         vhs
+        just
+        cargo
+        cargo-edit
+        cargo-tarpaulin
       ];
 
       iliad = pkgs.rustPlatform.buildRustPackage {
         pname = "iliad";
         version = "1.0.0";
         src = ./.;
-        cargoHash = "sha256-yrcseGNzgWSg1KYLsQPzz7Z876EG+4d9aRdOguuZOdo=";
+        cargoHash = "sha256-b68FADqSuVYrtxf8kCaVHw7pX1F65pv4R6dMyXx52Y0=";
 
         nativeBuildInputs = buildPkgs;
         buildInputs = libPkgs;
@@ -47,7 +51,7 @@
         iliad = iliad;
 
         docker = pkgs.dockerTools.buildLayeredImage {
-          name = "iliad";
+          name = "paulchambaz/iliad";
           tag = "latest";
           contents = [iliad];
 
