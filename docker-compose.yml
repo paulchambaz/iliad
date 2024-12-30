@@ -1,0 +1,9 @@
+services:
+  iliad:
+    image: paulchambaz/iliad:latest
+    volumes:
+      - /opt/iliad:/app/instance
+    environment:
+      - ILIAD_ADMIN_PASSWORD=fake-password
+    ports:
+      - 127.0.0.1:9090:9090
