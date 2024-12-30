@@ -26,8 +26,8 @@
         cargo-tarpaulin
         vhs
       ];
-    in {
-      packages.default = pkgs.rustPlatform.buildRustPackage {
+
+      iliad = pkgs.rustPlatform.buildRustPackage {
         pname = "iliad";
         version = "1.0.0";
         src = ./.;
@@ -38,8 +38,25 @@
 
         postInstall = ''
           mkdir -p $out/share/man/man1
-          scdoc < iliad.1.scd > $out/share/man/man1/iliad.1
+          scdoc < iliad.1.scd | sed "s/1980-01-01/$(date '+%B %Y')/" > $out/share/man/man1/iliad.1
         '';
+      };
+    in {
+      packages = {
+        default = iliad;
+        iliad = iliad;
+
+        docker = pkgs.dockerTools.buildLayeredImage {
+          name = "iliad";
+          tag = "latest";
+          contents = [iliad];
+
+          config = {
+            Env = ["PATH=/bin"];
+            WorkingDir = "/app";
+            Entrypoint = ["${iliad}/bin/iliad"];
+          };
+        };
       };
 
       devShell = pkgs.mkShell {
