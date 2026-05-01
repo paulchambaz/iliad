@@ -1,88 +1,86 @@
 use crate::{
+    error::AppError,
     inputs::auth::{AdminLogin, RegularLogin, RegularRegister},
-    models::user::User,
     outputs::auth::AuthToken,
+    repo::user as user_repo,
     state::AppState,
 };
-use anyhow::{anyhow, Result};
-use rand::Rng;
+use argon2::{
+    password_hash::{PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
+    Argon2,
+};
+use rand::distr::SampleString;
+use rand_core::OsRng;
+use std::time::Instant;
 
-pub async fn login(input: RegularLogin, state: &AppState) -> Result<AuthToken> {
-    let db = &state.db;
+pub async fn login(input: RegularLogin, state: &AppState) -> Result<AuthToken, AppError> {
+    let user = user_repo::find_by_username(&state.db, &input.username)
+        .await?
+        .ok_or(AppError::NotFound)?;
 
-    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
-        .bind(&input.username)
-        .fetch_optional(db)
-        .await?;
-
-    let user = user.ok_or_else(|| anyhow!("Username does not exist"))?;
-
-    let password_hash = format!("{:x}", md5::compute(&input.password));
-
-    if password_hash != user.password_hash {
-        return Err(anyhow!("Invalid password"));
-    }
+    let parsed = PasswordHash::new(&user.password_hash)
+        .map_err(|_| AppError::Internal("invalid password hash in db".into()))?;
+    Argon2::default()
+        .verify_password(input.password.as_bytes(), &parsed)
+        .map_err(|_| AppError::Unauthorized)?;
 
     let token = generate_token();
-    let mut regular_tokens = state
+    let mut tokens = state
         .regular_tokens
         .lock()
-        .map_err(|_| anyhow!("Could not access regular_tokens"))?;
-    regular_tokens.insert(token.clone(), input.username);
+        .map_err(|_| AppError::Internal("lock poisoned".into()))?;
+    tokens.retain(|_, (_, created)| created.elapsed() < state.token_ttl);
+    tokens.insert(token.clone(), (input.username, Instant::now()));
 
     Ok(AuthToken { token })
 }
 
-pub async fn admin_login(input: AdminLogin, state: &AppState) -> Result<AuthToken> {
+pub async fn admin_login(input: AdminLogin, state: &AppState) -> Result<AuthToken, AppError> {
     if input.password != state.admin_password {
-        return Err(anyhow!("Invalid admin password"));
+        return Err(AppError::Unauthorized);
     }
 
     let token = generate_token();
-
-    let mut admin_tokens = state
+    let mut tokens = state
         .admin_tokens
         .lock()
-        .map_err(|_| anyhow!("Could not access admin_tokens"))?;
-    admin_tokens.push(token.clone());
+        .map_err(|_| AppError::Internal("lock poisoned".into()))?;
+    tokens.retain(|(_, created)| created.elapsed() < state.token_ttl);
+    tokens.push((token.clone(), Instant::now()));
 
     Ok(AuthToken { token })
 }
 
-pub async fn register(input: RegularRegister, state: &AppState) -> Result<AuthToken> {
-    let db = &state.db;
-
-    let user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE username = ?")
-        .bind(&input.username)
-        .fetch_optional(db)
-        .await?;
-
-    if user.is_some() {
-        return Err(anyhow!("Username already exists"));
+pub async fn register(input: RegularRegister, state: &AppState) -> Result<AuthToken, AppError> {
+    if user_repo::find_by_username(&state.db, &input.username)
+        .await?
+        .is_some()
+    {
+        return Err(AppError::Conflict);
     }
 
-    let password_hash = format!("{:x}", md5::compute(&input.password));
-
-    sqlx::query("INSERT INTO users (username, password_hash) VALUES (?, ?)")
-        .bind(&input.username)
-        .bind(&password_hash)
-        .execute(db)
-        .await?;
+    let password_hash = hash_password(&input.password)?;
+    user_repo::create(&state.db, &input.username, &password_hash).await?;
 
     let token = generate_token();
-    let mut regular_tokens = state
+    let mut tokens = state
         .regular_tokens
         .lock()
-        .map_err(|_| anyhow!("Could not access regular_tokens"))?;
-    regular_tokens.insert(token.clone(), input.username);
+        .map_err(|_| AppError::Internal("lock poisoned".into()))?;
+    tokens.retain(|_, (_, created)| created.elapsed() < state.token_ttl);
+    tokens.insert(token.clone(), (input.username, Instant::now()));
 
     Ok(AuthToken { token })
+}
+
+fn hash_password(password: &str) -> Result<String, AppError> {
+    let salt = SaltString::generate(&mut OsRng);
+    Argon2::default()
+        .hash_password(password.as_bytes(), &salt)
+        .map(|h| h.to_string())
+        .map_err(|_| AppError::Internal("password hashing failed".into()))
 }
 
 fn generate_token() -> String {
-    rand::thread_rng()
-        .sample_iter(&rand::distributions::Alphanumeric)
-        .take(32)
-        .map(char::from)
-        .collect()
+    rand::distr::Alphanumeric.sample_string(&mut rand::rng(), 32)
 }

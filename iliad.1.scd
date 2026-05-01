@@ -113,7 +113,8 @@ All authenticated requests should include an "Authorization" header with the for
 	  {
 	    "hash": "string",
 	    "title": "string",
-	    "author": "string"
+	    "author": "string",
+	    "archive_ready": boolean
 	  },
 	  ...
 	]
@@ -133,7 +134,8 @@ All authenticated requests should include an "Authorization" header with the for
 	  "description": "string",
 	  "genres": ["string", ...],
 	  "duration": "integer",
-	  "size": "integer"
+	  "size": "integer",
+	  "archive_ready": boolean
 	}
 	```
 
@@ -141,8 +143,8 @@ All authenticated requests should include an "Authorization" header with the for
 	Download an audio book archive (requires authentication)
 	Input: None
 	Output:
-	- Binary file (application/octet-stream)
-	- Filename format: "{author-slug}-{title-slug}-{date}.tar.gz"
+	- 200: Binary file (application/octet-stream), filename format: "{author-slug}-{title-slug}-{date}.tar.gz"
+	- 503: Archive not yet ready. The request automatically promotes this book to the front of the archive build queue.
 
 ## Playback Positions
 
@@ -219,6 +221,8 @@ chapters:
 - *iliad* uses SQLite for its database, which is created automatically if it doesn't exist.
 - The server automatically scans the library directory on startup.
 - Audio book files are not served directly; instead, they are packaged into a .tar.gz archive for download.
+- Library scanning is fast: metadata is extracted immediately and the server returns. Archive creation happens in a background queue. The *archive_ready* field on each audio book indicates whether its archive is built and available for download.
+- Archives are rebuilt only when source files change (detected by content and size of the info file and chapter files). Unchanged books skip re-archiving on subsequent scans.
 - Playback positions older than 3 years are automatically cleaned up.
 
 # AUTHORS

@@ -3,7 +3,6 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
-
   outputs = {
     self,
     nixpkgs,
@@ -13,33 +12,30 @@
       pkgs = import nixpkgs {
         inherit system;
       };
-
       buildPkgs = with pkgs; [
         pkg-config
         scdoc
       ];
-
       libPkgs = with pkgs; [
         openssl
       ];
-
       devPkgs = with pkgs; [
         vhs
         just
         cargo
+        clippy
+        rustc
         cargo-edit
+        cargo-outdated
         cargo-tarpaulin
       ];
-
       iliad = pkgs.rustPlatform.buildRustPackage {
         pname = "iliad";
         version = "1.0.0";
         src = ./.;
-        cargoHash = "sha256-b68FADqSuVYrtxf8kCaVHw7pX1F65pv4R6dMyXx52Y0=";
-
+        cargoLock.lockFile = ./Cargo.lock;
         nativeBuildInputs = buildPkgs;
         buildInputs = libPkgs;
-
         postInstall = ''
           mkdir -p $out/share/man/man1
           scdoc < iliad.1.scd | sed "s/1980-01-01/$(date '+%B %Y')/" > $out/share/man/man1/iliad.1
@@ -49,20 +45,22 @@
       packages = {
         default = iliad;
         iliad = iliad;
-
         docker = pkgs.dockerTools.buildLayeredImage {
           name = "paulchambaz/iliad";
           tag = "latest";
-          contents = [iliad];
-
+          contents = [
+            pkgs.dockerTools.fakeNss
+            pkgs.cacert
+            iliad
+          ];
           config = {
-            Env = ["PATH=/bin"];
-            WorkingDir = "/app";
             Entrypoint = ["${iliad}/bin/iliad"];
+            Env = [
+              "SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
+            ];
           };
         };
       };
-
       devShell = pkgs.mkShell {
         nativeBuildInputs = buildPkgs;
         buildInputs = libPkgs ++ devPkgs;

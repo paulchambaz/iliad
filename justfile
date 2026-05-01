@@ -1,5 +1,5 @@
 run *ARGS:
-  cargo run {{ ARGS }}
+  RUST_LOG=info cargo run {{ ARGS }}
 
 watch *ARGS:
   cargo watch -x run {{ ARGS }}
@@ -19,14 +19,13 @@ coverage:
 fmt:
   cargo fmt
 
-vhs:
-  vhs demo.tape
+migrate:
+  sqlx migrate run --database-url sqlite:instance/iliad.db
 
-build-docker:
-  docker build -t paulchambaz/iliad:latest .
+docker:
+  @nix build .#docker
+  @docker load < result
+  @docker compose up
 
-run-docker:
-  docker compose up
-
-publish-docker:
-  docker push paulchambaz/iliad:latest
+cli *ARGS:
+  @./iliadctl {{ ARGS }}

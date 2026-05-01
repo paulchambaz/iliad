@@ -1,44 +1,33 @@
-use actix_web::{http::header, web, HttpResponse};
+use actix_files::NamedFile;
+use actix_web::http::header::{ContentDisposition, DispositionParam, DispositionType};
+use actix_web::{web, HttpRequest, HttpResponse};
 
-use crate::{
-    services::audiobook::{get_audiobook_archive, get_audiobook_by_hash, list_audiobooks},
-    state::AppState,
-};
+use crate::error::AppError;
+use crate::services::audiobook::{get_audiobook_archive, get_audiobook_by_hash, list_audiobooks};
+use crate::state::AppState;
 
-pub async fn get_audiobooks(state: web::Data<AppState>) -> HttpResponse {
-    match list_audiobooks(&state).await {
-        Ok(audiobooks) => HttpResponse::Ok().json(audiobooks),
-        Err(e) => {
-            eprintln!("Get audiobooks error: {:?}", e);
-            HttpResponse::InternalServerError().body("Internal server error")
-        }
-    }
+pub async fn get_audiobooks(state: web::Data<AppState>) -> Result<HttpResponse, AppError> {
+    let audiobooks = list_audiobooks(&state).await?;
+    Ok(HttpResponse::Ok().json(audiobooks))
 }
 
-pub async fn get_audiobook(state: web::Data<AppState>, path: web::Path<String>) -> HttpResponse {
-    let hash = path.into_inner();
-    match get_audiobook_by_hash(hash, &state).await {
-        Ok(audiobooks) => HttpResponse::Ok().json(audiobooks),
-        Err(e) => {
-            eprintln!("Get audiobooks error: {:?}", e);
-            HttpResponse::InternalServerError().body("Internal server error")
-        }
-    }
+pub async fn get_audiobook(
+    state: web::Data<AppState>,
+    path: web::Path<String>,
+) -> Result<HttpResponse, AppError> {
+    let book = get_audiobook_by_hash(path.into_inner(), &state).await?;
+    Ok(HttpResponse::Ok().json(book))
 }
 
 pub async fn get_audiobook_download(
+    req: HttpRequest,
     state: web::Data<AppState>,
     path: web::Path<String>,
-) -> HttpResponse {
-    let hash = path.into_inner();
-    match get_audiobook_archive(hash, &state).await {
-        Ok((filename, bytes)) => HttpResponse::Ok()
-            .insert_header(header::ContentType::octet_stream())
-            .insert_header(header::ContentDisposition::attachment(filename))
-            .body(bytes),
-        Err(e) => {
-            eprintln!("Error getting audiobook archive: {:?}", e);
-            HttpResponse::InternalServerError().body("Internal server error")
-        }
-    }
+) -> Result<HttpResponse, AppError> {
+    let (filename, archive_path) = get_audiobook_archive(path.into_inner(), &state).await?;
+    let file = NamedFile::open(&archive_path)?.set_content_disposition(ContentDisposition {
+        disposition: DispositionType::Attachment,
+        parameters: vec![DispositionParam::Filename(filename)],
+    });
+    Ok(file.into_response(&req))
 }

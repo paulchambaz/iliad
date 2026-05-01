@@ -2,7 +2,7 @@ services:
   iliad:
     image: paulchambaz/iliad:latest
     volumes:
-      - /opt/iliad:/app/instance
+      - ./instance:/app/instance
     environment:
       - ILIAD_ADMIN_PASSWORD=fake-password
     ports:

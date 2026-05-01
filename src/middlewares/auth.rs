@@ -1,9 +1,8 @@
 use actix_web::{
     dev::{ServiceRequest, ServiceResponse},
-    http::header::{HeaderName, HeaderValue},
     middleware::Next,
     web::Data,
-    Error,
+    Error, HttpMessage,
 };
 
 use crate::state::AppState;
@@ -19,38 +18,38 @@ enum AuthError {
 }
 
 pub async fn standard_auth(
-    mut req: ServiceRequest,
+    req: ServiceRequest,
     next: Next<impl actix_web::body::MessageBody>,
 ) -> Result<ServiceResponse<impl actix_web::body::MessageBody>, Error> {
     let token = extract_token(&req)?;
 
     match validate_token(&req, token) {
         Ok(UserType::Admin) => {
-            insert_user_header(&mut req, "admin");
+            req.extensions_mut().insert("admin".to_string());
             next.call(req).await
         }
         Ok(UserType::Regular(username)) => {
-            insert_user_header(&mut req, &username);
+            req.extensions_mut().insert(username);
             next.call(req).await
         }
-        Err(AuthError::Unauthorized) => Err(actix_web::error::ErrorUnauthorized("Invalid token")),
+        Err(AuthError::Unauthorized) => Err(actix_web::error::ErrorUnauthorized("invalid token")),
         Err(AuthError::InternalError(e)) => Err(actix_web::error::ErrorInternalServerError(e)),
     }
 }
 
 pub async fn admin_auth(
-    mut req: ServiceRequest,
+    req: ServiceRequest,
     next: Next<impl actix_web::body::MessageBody>,
 ) -> Result<ServiceResponse<impl actix_web::body::MessageBody>, Error> {
     let token = extract_token(&req)?;
 
     match validate_token(&req, token) {
         Ok(UserType::Admin) => {
-            insert_user_header(&mut req, "admin");
+            req.extensions_mut().insert("admin".to_string());
             next.call(req).await
         }
         Ok(UserType::Regular(_)) | Err(AuthError::Unauthorized) => {
-            Err(actix_web::error::ErrorUnauthorized("Invalid token"))
+            Err(actix_web::error::ErrorUnauthorized("invalid token"))
         }
         Err(AuthError::InternalError(e)) => Err(actix_web::error::ErrorInternalServerError(e)),
     }
@@ -60,15 +59,15 @@ fn extract_token(req: &ServiceRequest) -> Result<String, Error> {
     let auth_header = req
         .headers()
         .get("Authorization")
-        .ok_or_else(|| actix_web::error::ErrorUnauthorized("Missing auth token"))?;
+        .ok_or_else(|| actix_web::error::ErrorUnauthorized("missing auth token"))?;
 
     let auth_str = auth_header
         .to_str()
-        .map_err(|_| actix_web::error::ErrorUnauthorized("Invalid auth header"))?;
+        .map_err(|_| actix_web::error::ErrorUnauthorized("invalid auth header"))?;
 
     auth_str
         .strip_prefix("Bearer ")
-        .ok_or_else(|| actix_web::error::ErrorUnauthorized("Invalid auth format"))
+        .ok_or_else(|| actix_web::error::ErrorUnauthorized("invalid auth format"))
         .map(|s| s.to_string())
 }
 
@@ -77,31 +76,28 @@ fn validate_token(req: &ServiceRequest, token: String) -> Result<UserType, AuthE
         .app_data::<Data<AppState>>()
         .ok_or(AuthError::InternalError("AppState not found".to_string()))?;
 
-    // Check admin tokens
     let admin_tokens = state
         .admin_tokens
         .lock()
-        .map_err(|_| AuthError::InternalError("Failed to acquire admin tokens lock".to_string()))?;
+        .map_err(|_| AuthError::InternalError("lock poisoned".to_string()))?;
 
-    if admin_tokens.contains(&token) {
+    if admin_tokens
+        .iter()
+        .any(|(t, created)| t == &token && created.elapsed() < state.token_ttl)
+    {
         return Ok(UserType::Admin);
     }
 
-    // Check regular tokens
-    let regular_tokens = state.regular_tokens.lock().map_err(|_| {
-        AuthError::InternalError("Failed to acquire regular tokens lock".to_string())
-    })?;
+    let regular_tokens = state
+        .regular_tokens
+        .lock()
+        .map_err(|_| AuthError::InternalError("lock poisoned".to_string()))?;
 
-    if let Some(username) = regular_tokens.get(&token) {
-        Ok(UserType::Regular(username.clone()))
-    } else {
-        Err(AuthError::Unauthorized)
+    if let Some((username, created)) = regular_tokens.get(&token) {
+        if created.elapsed() < state.token_ttl {
+            return Ok(UserType::Regular(username.clone()));
+        }
     }
-}
 
-fn insert_user_header(req: &mut ServiceRequest, username: &str) {
-    req.headers_mut().insert(
-        HeaderName::from_static("user"),
-        HeaderValue::from_str(username).unwrap(),
-    );
+    Err(AuthError::Unauthorized)
 }

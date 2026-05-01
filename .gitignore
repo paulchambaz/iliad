@@ -3,3 +3,7 @@ instance/
 .direnv/
 result/
 .envrc
+.git
+CLAUDE.md
+ROADMAP.md
+.claude/

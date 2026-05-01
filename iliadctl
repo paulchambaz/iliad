@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASE="${ILIAD_HOST:-localhost:9090}"
+ADMIN_TOKEN_FILE="${XDG_RUNTIME_DIR:-/tmp}/iliad-admin-token"
+USER_TOKEN_FILE="${XDG_RUNTIME_DIR:-/tmp}/iliad-user-token"
+
+die()         { echo "error: $*" >&2; exit 1; }
+admin_token() { cat "$ADMIN_TOKEN_FILE" 2>/dev/null || die "no admin token — run: iliadctl admin-login <password>"; }
+user_token()  { cat "$USER_TOKEN_FILE"  2>/dev/null || die "no user token — run: iliadctl login <username> <password>"; }
+
+cmd() { echo "+ $*" >&2; }
+
+case "${1:-}" in
+
+  admin-login)
+    [[ $# -eq 2 ]] || die "usage: iliadctl admin-login <password>"
+    cmd http POST "$BASE/auth/admin" "password=$2"
+    token=$(http POST "$BASE/auth/admin" "password=$2" | jq -r .token)
+    echo "$token" > "$ADMIN_TOKEN_FILE"
+    echo "admin token: $token"
+    ;;
+
+  login)
+    [[ $# -eq 3 ]] || die "usage: iliadctl login <username> <password>"
+    cmd http POST "$BASE/auth/login" "username=$2" "password=$3"
+    token=$(http POST "$BASE/auth/login" "username=$2" "password=$3" | jq -r .token)
+    echo "$token" > "$USER_TOKEN_FILE"
+    echo "user token: $token"
+    ;;
+
+  register)
+    [[ $# -eq 3 ]] || die "usage: iliadctl register <username> <password>"
+    tok=$(admin_token)
+    cmd http POST "$BASE/auth/register" "Authorization:Bearer $tok" "username=$2" "password=$3"
+    http POST "$BASE/auth/register" "Authorization:Bearer $tok" "username=$2" "password=$3"
+    ;;
+
+  audiobooks)
+    tok=$(user_token)
+    cmd http GET "$BASE/audiobooks" "Authorization:Bearer $tok"
+    http GET "$BASE/audiobooks" "Authorization:Bearer $tok"
+    ;;
+
+  audiobook)
+    [[ $# -eq 2 ]] || die "usage: iliadctl audiobook <hash>"
+    tok=$(user_token)
+    cmd http GET "$BASE/audiobooks/$2" "Authorization:Bearer $tok"
+    http GET "$BASE/audiobooks/$2" "Authorization:Bearer $tok"
+    ;;
+
+  download)
+    [[ $# -eq 2 ]] || die "usage: iliadctl download <hash>"
+    tok=$(user_token)
+    cmd http --download GET "$BASE/audiobooks/$2/download" "Authorization:Bearer $tok"
+    http --download GET "$BASE/audiobooks/$2/download" "Authorization:Bearer $tok"
+    ;;
+
+  position)
+    [[ $# -eq 2 ]] || die "usage: iliadctl position <hash>"
+    tok=$(user_token)
+    cmd http GET "$BASE/positions/$2" "Authorization:Bearer $tok"
+    http GET "$BASE/positions/$2" "Authorization:Bearer $tok"
+    ;;
+
+  position-set)
+    [[ $# -eq 5 ]] || die "usage: iliadctl position-set <hash> <chapter_index> <chapter_position> <client_timestamp>"
+    tok=$(user_token)
+    cmd http PUT "$BASE/positions/$2" "Authorization:Bearer $tok" \
+      "chapter_index:=$3" "chapter_position:=$4" "client_timestamp:=$5"
+    http PUT "$BASE/positions/$2" "Authorization:Bearer $tok" \
+      "chapter_index:=$3" "chapter_position:=$4" "client_timestamp:=$5"
+    ;;
+
+  scan)
+    tok=$(admin_token)
+    cmd http PUT "$BASE/library/scan" "Authorization:Bearer $tok"
+    http PUT "$BASE/library/scan" "Authorization:Bearer $tok"
+    ;;
+
+  cleanup)
+    tok=$(admin_token)
+    cmd http PUT "$BASE/library/cleanup" "Authorization:Bearer $tok"
+    http PUT "$BASE/library/cleanup" "Authorization:Bearer $tok"
+    ;;
+
+  *)
+    cat >&2 <<EOF
+usage: iliadctl <command> [args]
+
+  admin-login <password>
+  login <username> <password>
+  register <username> <password>
+  audiobooks
+  audiobook <hash>
+  download <hash>
+  position <hash>
+  position-set <hash> <chapter_index> <chapter_position> <client_timestamp>
+  scan
+  cleanup
+
+env: ILIAD_HOST (default: localhost:9090)
+EOF
+    exit 1
+    ;;
+esac
