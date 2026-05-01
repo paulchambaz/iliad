@@ -172,10 +172,15 @@ fn scan_audiobook(
         .as_sequence()
         .ok_or_else(|| AppError::Internal("missing or invalid 'chapters'".into()))?;
 
+    let cover = yaml["cover"].as_str().map(|s| s.to_string());
+
     let mut chapter_paths: Vec<PathBuf> = Vec::new();
     let mut chapter_durations: Vec<Duration> = Vec::new();
     let mut total_duration = Duration::new(0, 0);
     let mut total_size = fs::metadata(&info_path)?.len();
+    if let Some(ref cover_file) = cover {
+        total_size += fs::metadata(dir.join(cover_file)).map(|m| m.len()).unwrap_or(0);
+    }
     let mut final_chapter_index = 0;
     let mut final_chapter_position = 0;
 
@@ -243,6 +248,7 @@ fn scan_audiobook(
         path,
         final_chapter_index,
         final_chapter_position,
+        cover,
         archive_ready: false,
     };
 
@@ -285,6 +291,13 @@ fn create_archive(dir: &Path) -> Result<(), AppError> {
     let enc = GzEncoder::new(archive_file, Compression::fast());
     let mut tar = Builder::new(enc);
     tar.append_path_with_name(&info_path, "info.yml")?;
+
+    if let Some(cover) = yaml["cover"].as_str() {
+        let cover_path = dir.join(cover);
+        if cover_path.exists() {
+            tar.append_path_with_name(&cover_path, cover)?;
+        }
+    }
 
     for (i, chapter) in chapter_list.into_iter().enumerate() {
         tracing::info!("[{}/{}] archiving: {}", i + 1, n, chapter.title);

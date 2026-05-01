@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO audiobooks (hash, title, author, date, description, genres, duration, size, path, final_chapter_index, final_chapter_position, cover) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 12
+    },
+    "nullable": []
+  },
+  "hash": "cb4a8016d53e14620c253c2f0c28dcaf5914249acfc0eb727c58e67febef680d"
+}

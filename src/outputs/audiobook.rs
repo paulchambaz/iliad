@@ -21,5 +21,6 @@ pub struct AudiobookLong {
     pub genres: Vec<String>,
     pub duration: i64,
     pub size: i64,
+    pub cover: Option<String>,
     pub archive_ready: bool,
 }

@@ -13,5 +13,6 @@ pub struct Audiobook {
     pub path: String,
     pub final_chapter_index: i64,
     pub final_chapter_position: i64,
+    pub cover: Option<String>,
     pub archive_ready: bool,
 }

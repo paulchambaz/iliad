@@ -37,6 +37,7 @@ pub async fn get_audiobook_by_hash(hash: String, state: &AppState) -> Result<Aud
         genres: serde_json::from_str(&book.genres).unwrap_or_default(),
         duration: book.duration,
         size: book.size,
+        cover: book.cover,
         archive_ready: book.archive_ready,
     })
 }

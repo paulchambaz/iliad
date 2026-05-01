@@ -17,6 +17,7 @@ pub async fn find_all(db: &SqlitePool) -> Result<Vec<Audiobook>, AppError> {
             path as "path!",
             final_chapter_index as "final_chapter_index!",
             final_chapter_position as "final_chapter_position!",
+            cover,
             archive_ready as "archive_ready!: bool"
         FROM audiobooks"#
     )
@@ -40,6 +41,7 @@ pub async fn find_by_hash(db: &SqlitePool, hash: &str) -> Result<Option<Audioboo
             path as "path!",
             final_chapter_index as "final_chapter_index!",
             final_chapter_position as "final_chapter_position!",
+            cover,
             archive_ready as "archive_ready!: bool"
         FROM audiobooks WHERE hash = ?"#,
         hash
@@ -76,7 +78,7 @@ pub async fn find_path(db: &SqlitePool, hash: &str) -> Result<Option<String>, Ap
 
 pub async fn create(db: &SqlitePool, audiobook: &Audiobook) -> Result<(), AppError> {
     sqlx::query!(
-        "INSERT INTO audiobooks (hash, title, author, date, description, genres, duration, size, path, final_chapter_index, final_chapter_position) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO audiobooks (hash, title, author, date, description, genres, duration, size, path, final_chapter_index, final_chapter_position, cover) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         audiobook.hash,
         audiobook.title,
         audiobook.author,
@@ -88,6 +90,7 @@ pub async fn create(db: &SqlitePool, audiobook: &Audiobook) -> Result<(), AppErr
         audiobook.path,
         audiobook.final_chapter_index,
         audiobook.final_chapter_position,
+        audiobook.cover,
     )
     .execute(db)
     .await?;
@@ -96,7 +99,7 @@ pub async fn create(db: &SqlitePool, audiobook: &Audiobook) -> Result<(), AppErr
 
 pub async fn update(db: &SqlitePool, audiobook: &Audiobook) -> Result<(), AppError> {
     sqlx::query!(
-        "UPDATE audiobooks SET title = ?, author = ?, date = ?, description = ?, genres = ?, duration = ?, size = ?, path = ?, final_chapter_index = ?, final_chapter_position = ? WHERE hash = ?",
+        "UPDATE audiobooks SET title = ?, author = ?, date = ?, description = ?, genres = ?, duration = ?, size = ?, path = ?, final_chapter_index = ?, final_chapter_position = ?, cover = ? WHERE hash = ?",
         audiobook.title,
         audiobook.author,
         audiobook.date,
@@ -107,6 +110,7 @@ pub async fn update(db: &SqlitePool, audiobook: &Audiobook) -> Result<(), AppErr
         audiobook.path,
         audiobook.final_chapter_index,
         audiobook.final_chapter_position,
+        audiobook.cover,
         audiobook.hash,
     )
     .execute(db)

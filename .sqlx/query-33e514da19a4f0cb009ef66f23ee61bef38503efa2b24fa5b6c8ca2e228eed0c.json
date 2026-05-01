@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "SELECT\n            hash as \"hash!\",\n            title as \"title!\",\n            author as \"author!\",\n            date as \"date!: i32\",\n            description as \"description!\",\n            genres as \"genres!\",\n            duration as \"duration!\",\n            size as \"size!\",\n            path as \"path!\",\n            final_chapter_index as \"final_chapter_index!\",\n            final_chapter_position as \"final_chapter_position!\",\n            archive_ready as \"archive_ready!: bool\"\n        FROM audiobooks",
+  "query": "SELECT\n            hash as \"hash!\",\n            title as \"title!\",\n            author as \"author!\",\n            date as \"date!: i32\",\n            description as \"description!\",\n            genres as \"genres!\",\n            duration as \"duration!\",\n            size as \"size!\",\n            path as \"path!\",\n            final_chapter_index as \"final_chapter_index!\",\n            final_chapter_position as \"final_chapter_position!\",\n            cover,\n            archive_ready as \"archive_ready!: bool\"\n        FROM audiobooks WHERE hash = ?",
   "describe": {
     "columns": [
       {
@@ -59,13 +59,18 @@
         "type_info": "Integer"
       },
       {
-        "name": "archive_ready!: bool",
+        "name": "cover",
         "ordinal": 11,
+        "type_info": "Text"
+      },
+      {
+        "name": "archive_ready!: bool",
+        "ordinal": 12,
         "type_info": "Integer"
       }
     ],
     "parameters": {
-      "Right": 0
+      "Right": 1
     },
     "nullable": [
       true,
@@ -79,8 +84,9 @@
       false,
       false,
       false,
+      true,
       false
     ]
   },
-  "hash": "166095f677d100742bc8b5ceed602b419cec84824d671c52d2142bbbcaf7bd47"
+  "hash": "33e514da19a4f0cb009ef66f23ee61bef38503efa2b24fa5b6c8ca2e228eed0c"
 }
