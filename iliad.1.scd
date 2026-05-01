@@ -114,6 +114,9 @@ All authenticated requests should include an "Authorization" header with the for
 	    "hash": "string",
 	    "title": "string",
 	    "author": "string",
+	    "date": integer,
+	    "genres": ["string", ...],
+	    "duration": integer,
 	    "archive_ready": boolean
 	  },
 	  ...

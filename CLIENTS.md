@@ -100,6 +100,9 @@ Response `200`:
     "hash": "string",
     "title": "string",
     "author": "string",
+    "date": 2021,
+    "genres": ["fiction", "thriller"],
+    "duration": 123456,
     "archive_ready": true
   }
 ]
@@ -108,6 +111,12 @@ Response `200`:
 `hash` is the stable identifier for a book. It is derived from the book's
 content and does not change between scans as long as the source files are
 unchanged.
+
+`date` is the publication year as an integer.
+
+`genres` is the list of genres from the book's `info.yml`.
+
+`duration` is the total playback duration in milliseconds.
 
 `archive_ready` indicates whether the downloadable `.tar.gz` archive has been
 built. A newly scanned book may not be ready immediately — see the download

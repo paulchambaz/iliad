@@ -15,6 +15,9 @@ pub async fn list_audiobooks(state: &AppState) -> Result<Vec<AudiobookShort>, Ap
             hash: book.hash,
             title: book.title,
             author: book.author,
+            date: book.date,
+            genres: serde_json::from_str(&book.genres).unwrap_or_default(),
+            duration: book.duration,
             archive_ready: book.archive_ready,
         })
         .collect())
