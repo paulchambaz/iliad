@@ -4,7 +4,8 @@ use crate::{
     repo::audiobook as audiobook_repo,
     state::AppState,
 };
-use std::path::PathBuf;
+use base64::{engine::general_purpose::STANDARD, Engine};
+use std::{fs, path::PathBuf};
 
 pub async fn list_audiobooks(state: &AppState) -> Result<Vec<AudiobookShort>, AppError> {
     let audiobooks = audiobook_repo::find_all(&state.db).await?;
@@ -37,7 +38,10 @@ pub async fn get_audiobook_by_hash(hash: String, state: &AppState) -> Result<Aud
         genres: serde_json::from_str(&book.genres).unwrap_or_default(),
         duration: book.duration,
         size: book.size,
-        cover: book.cover,
+        cover: book.cover.as_deref().and_then(|filename| {
+            let path = PathBuf::from(&book.path).join(filename);
+            fs::read(&path).ok().map(|bytes| STANDARD.encode(&bytes))
+        }),
         archive_ready: book.archive_ready,
     })
 }
