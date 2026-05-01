@@ -37,6 +37,7 @@
         cargoLock.lockFile = ./Cargo.lock;
         nativeBuildInputs = buildPkgs;
         buildInputs = libPkgs;
+        SQLX_OFFLINE = "true";
         postInstall = ''
           mkdir -p $out/share/man/man1
           scdoc < iliad.1.scd | sed "s/1980-01-01/$(date '+%B %Y')/" > $out/share/man/man1/iliad.1

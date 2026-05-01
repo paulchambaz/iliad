@@ -16,14 +16,22 @@ If you have Nix with flakes enabled, you can run Iliad directly from the reposit
 nix run github:paulchambaz/iliad
 ```
 
-You can also add it to your NixOS configuration.
+You can also add it to your NixOS configuration as a flake input.
 
 ### Using Docker
 
-A Docker image is available for easy deployment:
+Build and run the Docker image via Nix:
 
 ```
-docker run -v /path/to/your/audiobooks:/app/instance -e ILIAD_ADMIN_PASSWORD=your-password -p 9090:9090 paulchambaz/iliad:latest
+nix build .#docker
+docker load < result
+docker compose up
+```
+
+Or with the provided justfile:
+
+```
+just docker
 ```
 
 ## Quick Start
@@ -41,6 +49,8 @@ docker run -v /path/to/your/audiobooks:/app/instance -e ILIAD_ADMIN_PASSWORD=you
 ## Usage
 
 For detailed usage instructions, please refer to the [man page](iliad.1.scd).
+
+For client implementation details and the full API contract, see [CLIENTS.md](CLIENTS.md).
 
 Basic API endpoints:
 
@@ -61,8 +71,10 @@ For a complete list of configuration options, consult the man page.
 
 ## License
 
-This project is licensed under the GPLv3. See the [LICENSE](LICENSE) file for details.
+<a href="https://www.gnu.org/licenses/gpl-3.0.en.html">
+  <img src="https://www.gnu.org/graphics/gplv3-127x51.png" alt="GNU GPLv3" />
+</a>
 
-## Authors
-
-Written by Paul Chambaz in 2024.
+Iliad is free software. You can use, study, modify and distribute it under the
+terms of the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html),
+version 3 or later.
