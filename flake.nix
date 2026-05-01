@@ -28,6 +28,7 @@
         cargo-edit
         cargo-outdated
         cargo-tarpaulin
+        sqlx-cli
       ];
       iliad = pkgs.rustPlatform.buildRustPackage {
         pname = "iliad";

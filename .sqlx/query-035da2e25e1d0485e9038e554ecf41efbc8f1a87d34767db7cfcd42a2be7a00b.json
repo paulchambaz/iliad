@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM positions WHERE timestamp < ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "035da2e25e1d0485e9038e554ecf41efbc8f1a87d34767db7cfcd42a2be7a00b"
+}

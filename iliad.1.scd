@@ -172,7 +172,17 @@ All authenticated requests should include an "Authorization" header with the for
 	}
 	```
 
-	Output: 200 OK (no content)
+	Output: 200 OK (no content), or 400 if client_timestamp is more than 300
+	seconds in the future.
+
+	*client_timestamp* must be the Unix timestamp in seconds at which the user
+	was at this position. The server accepts the update only if this timestamp
+	is strictly greater than the stored timestamp. Otherwise the update is
+	silently discarded and 200 is still returned. This means latest action
+	wins: playing forward, skipping, and rewinding are all treated identically.
+	Clients must fetch the current position before starting playback and must
+	never generate new timestamps from a locally cached state without first
+	syncing.
 
 ## Library Management
 
@@ -227,7 +237,7 @@ chapters:
 
 # AUTHORS
 
-This program was created by [Your Name] in [Year]. It is licensed under [License], for more information, please read the *LICENSE* file in the project repository.
+This program was created by Paul Chambaz in 2026. For more information, please read the *LICENSE* file in the project repository.
 
 # SEE ALSO
 

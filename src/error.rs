@@ -13,6 +13,8 @@ pub enum AppError {
     Internal(String),
     #[error("archive not ready")]
     ServiceUnavailable,
+    #[error("{0}")]
+    BadRequest(String),
 }
 
 impl actix_web::ResponseError for AppError {
@@ -22,6 +24,7 @@ impl actix_web::ResponseError for AppError {
             AppError::Unauthorized => HttpResponse::Unauthorized().body(self.to_string()),
             AppError::Conflict => HttpResponse::Conflict().body(self.to_string()),
             AppError::ServiceUnavailable => HttpResponse::ServiceUnavailable().body(self.to_string()),
+            AppError::BadRequest(msg) => HttpResponse::BadRequest().body(msg.clone()),
             AppError::Internal(msg) => {
                 tracing::error!("{}", msg);
                 HttpResponse::InternalServerError().body("internal server error")

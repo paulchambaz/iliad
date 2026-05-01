@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n            hash as \"hash!\",\n            title as \"title!\",\n            author as \"author!\",\n            date as \"date!: i32\",\n            description as \"description!\",\n            genres as \"genres!\",\n            duration as \"duration!\",\n            size as \"size!\",\n            path as \"path!\",\n            final_chapter_index as \"final_chapter_index!\",\n            final_chapter_position as \"final_chapter_position!\",\n            archive_ready as \"archive_ready!: bool\"\n        FROM audiobooks",
+  "describe": {
+    "columns": [
+      {
+        "name": "hash!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "title!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "author!",
+        "ordinal": 2,
+        "type_info": "Text"
+      },
+      {
+        "name": "date!: i32",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "description!",
+        "ordinal": 4,
+        "type_info": "Text"
+      },
+      {
+        "name": "genres!",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "duration!",
+        "ordinal": 6,
+        "type_info": "Integer"
+      },
+      {
+        "name": "size!",
+        "ordinal": 7,
+        "type_info": "Integer"
+      },
+      {
+        "name": "path!",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "final_chapter_index!",
+        "ordinal": 9,
+        "type_info": "Integer"
+      },
+      {
+        "name": "final_chapter_position!",
+        "ordinal": 10,
+        "type_info": "Integer"
+      },
+      {
+        "name": "archive_ready!: bool",
+        "ordinal": 11,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "166095f677d100742bc8b5ceed602b419cec84824d671c52d2142bbbcaf7bd47"
+}

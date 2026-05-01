@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM positions\n         WHERE EXISTS (\n             SELECT 1 FROM audiobooks\n             WHERE audiobooks.hash = positions.audiobook_hash\n             AND (positions.chapter_index > audiobooks.final_chapter_index\n                  OR (positions.chapter_index = audiobooks.final_chapter_index\n                      AND positions.chapter_position >= audiobooks.final_chapter_position))\n         )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": []
+  },
+  "hash": "6fbe4e59b7413ebe3d650339ea1868bf549993e2a641c703b57e0a45c62052e5"
+}

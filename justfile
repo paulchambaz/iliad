@@ -5,7 +5,7 @@ watch *ARGS:
   cargo watch -x run {{ ARGS }}
 
 build:
-  cargo build --release
+  SQLX_OFFLINE=true cargo build --release
 
 test:
   cargo test

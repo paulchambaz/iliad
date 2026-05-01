@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "DELETE FROM audiobooks WHERE hash = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "45f8106399bea3c91ad969b768f93c72afe7c3c5069e23be91aeee819ed1cbbd"
+}

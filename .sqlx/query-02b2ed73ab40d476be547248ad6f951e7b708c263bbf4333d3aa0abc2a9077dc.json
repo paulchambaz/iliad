@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "INSERT INTO positions (audiobook_hash, username, chapter_index, chapter_position, timestamp) VALUES (?, ?, ?, ?, ?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "02b2ed73ab40d476be547248ad6f951e7b708c263bbf4333d3aa0abc2a9077dc"
+}

@@ -1,0 +1,32 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n            hash as \"hash!\",\n            archive_checksum,\n            archive_ready as \"archive_ready!: bool\"\n        FROM audiobooks",
+  "describe": {
+    "columns": [
+      {
+        "name": "hash!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "archive_checksum",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "archive_ready!: bool",
+        "ordinal": 2,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "8c216494782db86ed29d41afd953ed638de67c998aa4cbfe0285413e658dc3d8"
+}

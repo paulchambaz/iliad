@@ -54,9 +54,10 @@ pub async fn scan_library(state: &AppState) -> Result<(), AppError> {
         }
 
         let archive_path = PathBuf::from(&audiobook.path).join("archive.tar.gz");
-        let db_checksum = existing_map
+        let (db_checksum, db_archive_ready) = existing_map
             .get(&audiobook.hash)
-            .and_then(|c| c.as_deref());
+            .map(|e| (e.0.as_deref(), e.1))
+            .unwrap_or((None, false));
         let archive_exists = archive_path.exists();
 
         tracing::debug!(
@@ -64,11 +65,14 @@ pub async fn scan_library(state: &AppState) -> Result<(), AppError> {
             title = %audiobook.title,
             source_checksum = %source_checksum,
             db_checksum = ?db_checksum,
+            db_archive_ready,
             archive_exists,
             "archive staleness check"
         );
 
-        let archive_current = archive_exists && db_checksum == Some(source_checksum.as_str());
+        let archive_current = archive_exists
+            && db_checksum == Some(source_checksum.as_str())
+            && db_archive_ready;
 
         if archive_current {
             tracing::info!(hash = %audiobook.hash, "archive up-to-date, skipping");

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE positions SET chapter_index = ?, chapter_position = ?, timestamp = ? WHERE audiobook_hash = ? AND username = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "17fe0936d345a266560b9cb140ad1fd6c54e2de1a464ee8d7e7e35808e596890"
+}

@@ -33,7 +33,7 @@ tar = "0.4.45"
 thiserror = "2"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-tokio = { version = "1.52.1", features = ["sync", "rt"] }
+tokio = { version = "1.52.1", features = ["sync", "rt", "macros"] }
 actix-files = "0.6.10"
 
 [[bin]]

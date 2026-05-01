@@ -1,0 +1,44 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT\n            audiobook_hash as \"audiobook_hash!\",\n            username as \"username!\",\n            chapter_index as \"chapter_index!\",\n            chapter_position as \"chapter_position!\",\n            timestamp as \"timestamp!: NaiveDateTime\"\n        FROM positions WHERE audiobook_hash = ? AND username = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "audiobook_hash!",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "username!",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "chapter_index!",
+        "ordinal": 2,
+        "type_info": "Integer"
+      },
+      {
+        "name": "chapter_position!",
+        "ordinal": 3,
+        "type_info": "Integer"
+      },
+      {
+        "name": "timestamp!: NaiveDateTime",
+        "ordinal": 4,
+        "type_info": "Datetime"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "f72c25f76e46b57f346415d81f793cd114623479bdb3e8b8a0cf8da445b264b1"
+}

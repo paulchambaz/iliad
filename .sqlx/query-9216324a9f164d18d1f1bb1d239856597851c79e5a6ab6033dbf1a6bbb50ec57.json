@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT path FROM audiobooks WHERE hash = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "path",
+        "ordinal": 0,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9216324a9f164d18d1f1bb1d239856597851c79e5a6ab6033dbf1a6bbb50ec57"
+}

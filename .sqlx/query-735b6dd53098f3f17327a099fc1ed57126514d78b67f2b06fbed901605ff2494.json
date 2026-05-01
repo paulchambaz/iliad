@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE audiobooks SET title = ?, author = ?, date = ?, description = ?, genres = ?, duration = ?, size = ?, path = ?, final_chapter_index = ?, final_chapter_position = ? WHERE hash = ?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 11
+    },
+    "nullable": []
+  },
+  "hash": "735b6dd53098f3f17327a099fc1ed57126514d78b67f2b06fbed901605ff2494"
+}
