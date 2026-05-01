@@ -46,7 +46,7 @@
         default = iliad;
         iliad = iliad;
         docker = pkgs.dockerTools.buildLayeredImage {
-          name = "paulchambaz/iliad";
+          name = "iliad";
           tag = "latest";
           contents = [
             pkgs.dockerTools.fakeNss
