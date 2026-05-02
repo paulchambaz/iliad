@@ -199,7 +199,7 @@ user just loses progress across devices or reinstalls.
 
 - `chapter_index`: zero-based integer index into the book's chapter list.
 - `chapter_position`: position within the chapter in **milliseconds**.
-- `client_timestamp`: Unix timestamp in **seconds** (not milliseconds).
+- `timestamp`: Unix timestamp in **seconds** (not milliseconds).
 
 ### Get position
 
@@ -235,21 +235,21 @@ Content-Type: application/json
 {
   "chapter_index": 2,
   "chapter_position": 180000,
-  "client_timestamp": 1714521600
+  "timestamp": 1714521600
 }
 ```
 
 Response `200` with no body.
 
-`client_timestamp` must be the wall-clock time at which the user was at this
+`timestamp` must be the wall-clock time at which the user was at this
 position — not the time of the HTTP request, though in practice they are
 close. Use the current Unix time in seconds.
 
 ### The position merge algorithm
 
-The rule is simple: **latest `client_timestamp` wins.**
+The rule is simple: **latest `timestamp` wins.**
 
-The server accepts the incoming position if `client_timestamp` is strictly
+The server accepts the incoming position if `timestamp` is strictly
 greater than the stored timestamp. Otherwise it discards the update silently
 and returns `200` either way.
 
@@ -260,7 +260,7 @@ special case for rewinds. A user who scrubs back to an earlier chapter
 generates a new timestamp for that action; that timestamp wins over any older
 position on any other device.
 
-One guard: the server rejects `client_timestamp` values more than 300 seconds
+One guard: the server rejects `timestamp` values more than 300 seconds
 in the future (compared to server wall clock) with `400 Bad Request`. This
 prevents a device with a misconfigured fast clock from permanently locking a
 position.

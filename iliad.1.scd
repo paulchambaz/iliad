@@ -171,14 +171,14 @@ All authenticated requests should include an "Authorization" header with the for
 	{
 	  "chapter_index": "integer",
 	  "chapter_position": "integer",
-	  "client_timestamp": "integer"
+	  "timestamp": "integer"
 	}
 	```
 
-	Output: 200 OK (no content), or 400 if client_timestamp is more than 300
+	Output: 200 OK (no content), or 400 if timestamp is more than 300
 	seconds in the future.
 
-	*client_timestamp* must be the Unix timestamp in seconds at which the user
+	*timestamp* must be the Unix timestamp in seconds at which the user
 	was at this position. The server accepts the update only if this timestamp
 	is strictly greater than the stored timestamp. Otherwise the update is
 	silently discarded and 200 is still returned. This means latest action

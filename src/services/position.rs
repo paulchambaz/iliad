@@ -34,7 +34,7 @@ pub async fn put_position_user_book(
     input: InputPositionUpdate,
     state: &AppState,
 ) -> Result<(), AppError> {
-    let client_timestamp = DateTime::<Utc>::from_timestamp(input.client_timestamp, 0)
+    let timestamp = DateTime::<Utc>::from_timestamp(input.timestamp, 0)
         .ok_or_else(|| AppError::Internal("invalid client timestamp".into()))?
         .naive_utc();
 
@@ -48,7 +48,7 @@ pub async fn put_position_user_book(
                 &username,
                 input.chapter_index,
                 input.chapter_position,
-                client_timestamp,
+                timestamp,
             )
             .await?;
         }
@@ -59,7 +59,7 @@ pub async fn put_position_user_book(
                 &username,
                 input.chapter_index,
                 input.chapter_position,
-                client_timestamp,
+                timestamp,
             )
             .await?;
         }
