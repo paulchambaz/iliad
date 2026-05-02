@@ -19,6 +19,7 @@ use handlers::auth::{post_auth_admin, post_auth_login, post_auth_register};
 use handlers::library::{put_library_cleanup, put_library_scan};
 use handlers::position::{get_position, put_position};
 use middlewares::auth::{admin_auth, standard_auth};
+use middlewares::logging::log_request;
 use repo::audiobook as audiobook_repo;
 use services::library::{build_archive, scan_library};
 use state::AppState;
@@ -83,7 +84,9 @@ async fn main() -> Result<(), AppError> {
     tracing::info!("starting server at {}:{}", config.server_address, config.server_port);
 
     HttpServer::new(move || {
-        let mut app = App::new().app_data(web::Data::new(state.clone()));
+        let mut app = App::new()
+            .app_data(web::Data::new(state.clone()))
+            .wrap(from_fn(log_request));
 
         app = app.service(web::resource("/auth/login").route(web::post().to(post_auth_login)));
         app = app.service(web::resource("/auth/admin").route(web::post().to(post_auth_admin)));
