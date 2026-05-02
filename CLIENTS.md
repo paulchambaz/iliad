@@ -213,11 +213,15 @@ Response `200`:
 ```json
 {
   "chapter_index": 0,
-  "chapter_position": 0
+  "chapter_position": 0,
+  "timestamp": 1714521600
 }
 ```
 
-If the user has never listened to this book, the server returns `0, 0` — there
+`timestamp` is the Unix timestamp (seconds) of the last position update. It is
+`0` if the user has never listened to this book.
+
+If the user has never listened to this book, the server returns `0, 0, 0` — there
 is no 404 for a missing position. Always call this when opening a book to
 resume from the last known position.
 

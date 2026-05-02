@@ -19,10 +19,12 @@ pub async fn get_position_user_book(
         Some(pos) => Ok(OutputPositionUpdate {
             chapter_index: pos.chapter_index,
             chapter_position: pos.chapter_position,
+            timestamp: pos.timestamp.and_utc().timestamp(),
         }),
         None => Ok(OutputPositionUpdate {
             chapter_index: 0,
             chapter_position: 0,
+            timestamp: 0,
         }),
     }
 }
